@@ -4266,6 +4266,7 @@ async function refreshData(pageId) {
     const resp = await fetch(BATCH_API + '?t=' + Date.now() + '&forceRefresh=1', { method:'GET', headers:{'Cache-Control':'no-cache, no-store'} });
     const data = await resp.json();
     rawSRR    = data.records    || [];
+    applyDirectionField(rawSRR);
     updateRateLabel();
     rawJPA    = [];
     allUsers  = data.users      || [];
@@ -5049,6 +5050,22 @@ function stripSalesPersonCode(name) {
   return String(name || '').split('|')[0].trim();
 }
 
+// Air Export/Import records never had a native `direction` field the way
+// USA's schema did - only `lob` (e.g. "AIR EXPORT"/"AIR IMPORT"). Every
+// `(r.direction||'').toLowerCase() === currentDirection...` filter
+// throughout this file silently excluded everything as a result, since
+// r.direction was always undefined. Derives and stamps it once here,
+// mutating the rawSRR records in place - every later filter/slice shares
+// the same object references, so this one pass fixes all of them.
+function applyDirectionField(arr) {
+  (arr || []).forEach(r => {
+    if (r.direction) return; // don't override if somehow already set
+    const lob = (r.lob || '').toUpperCase();
+    if (lob.indexOf('EXPORT') !== -1) r.direction = 'Export';
+    else if (lob.indexOf('IMPORT') !== -1) r.direction = 'Import';
+  });
+}
+
 // Builds a Sales Rep -> Zone lookup from zoneMapping and stamps a `zone`
 // field onto every rawSRR and rawWIP record, matched on salesPerson against
 // the mapping's "Sales Rep Name" field (salesRepName after camelCase).
@@ -5102,6 +5119,7 @@ async function loadData() {
           if (s2 === 'HIT') {
             // Full cache ready — update data, re-render only the currently visible page
             rawSRR = d2.records || []; rawJPA = [];
+            applyDirectionField(rawSRR);
             allSRR = rawSRR.filter(r => (r.direction||'').toLowerCase() === currentDirection.toLowerCase() && matchesCurrentLob(r)); allJPA = [...rawJPA];
             applyZoneLookup();
             applyRLS();
@@ -5121,6 +5139,7 @@ async function loadData() {
               if (!r3.ok) return;
               const d3 = await r3.json();
               rawSRR = d3.records || []; rawJPA = [];
+              applyDirectionField(rawSRR);
               allSRR = rawSRR.filter(r => (r.direction||'').toLowerCase() === currentDirection.toLowerCase() && matchesCurrentLob(r)); allJPA = [...rawJPA];
               applyZoneLookup();
               applyRLS();
@@ -5134,6 +5153,7 @@ async function loadData() {
       }, 45000);
     }
     rawSRR     = data.records    || [];
+    applyDirectionField(rawSRR);
     rawJPA     = [];
     allUsers   = data.users      || [];
     // Filter by current direction
