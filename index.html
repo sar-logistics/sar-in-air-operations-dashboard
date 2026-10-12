@@ -2604,7 +2604,7 @@ function handleAuth() {
       } catch(e) {
         console.error('Auth error:', e);
         showSigninError('Sign-in failed. Please try again.');
-        document.getElementById('signinBtn').style.display = 'flex';
+        const sb = document.getElementById('signinBtn'); if (sb) sb.style.display = 'flex';
       }
     },
     auto_select: false,
@@ -2637,7 +2637,7 @@ async function verifyUser(info) {
 
     if (!user) {
       showSigninError('Access denied. ' + email + ' is not authorised. Contact your administrator.');
-      document.getElementById('signinBtn').style.display = 'flex';
+      const sb = document.getElementById('signinBtn'); if (sb) sb.style.display = 'flex';
       return;
     }
 
@@ -2670,7 +2670,7 @@ async function verifyUser(info) {
   } catch(e) {
     console.error('verifyUser error:', e);
     showSigninError('Failed to verify access. Please try again.');
-    document.getElementById('signinBtn').style.display = 'flex';
+    const sb = document.getElementById('signinBtn'); if (sb) sb.style.display = 'flex';
   }
 }
 
