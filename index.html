@@ -1039,27 +1039,27 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
         <i class="ti ti-chevron-down sec-chev"></i>
       </div>
       <div class="nav-section-body" id="sec-pendency-body">
-        <div class="nav-item" data-tooltip="Total Jobs Created in the period" onclick="setPage('total-jobs','Total Jobs Created','Job Related',this)">
-          <i class="ti ti-briefcase"></i><span class="nav-item-label">Total Jobs Created</span>
-        </div>
-        <div class="nav-item" data-tooltip="Jobs currently open and not yet closed" onclick="setPage('open-jobs','Open Jobs','Job Related',this)">
-          <i class="ti ti-folder-open"></i><span class="nav-item-label">Open Jobs</span><span class="nav-badge hidden" id="badge-open-jobs">0</span>
+        <div class="nav-item" data-tooltip="Total Air Export + Import jobs in the period" onclick="setPage('total-jobs','Total Air Jobs','Job Related',this)">
+          <i class="ti ti-briefcase"></i><span class="nav-item-label">Total Air Jobs</span>
         </div>
       </div><!-- /sec-pendency-body -->
 
       <div class="nav-section-divider"></div>
 
-      <!-- Job: Revenue, Cost & Profit -->
+      <!-- Billing & Ops Control -->
       <div class="nav-section-hdr pendency" id="sec-performance-hdr" onclick="toggleSection('performance')">
-        <i class="ti ti-report-money" style="font-size:10px"></i>Job: Revenue, Cost &amp; Profit
+        <i class="ti ti-report-money" style="font-size:10px"></i>Billing &amp; Ops Control
         <i class="ti ti-chevron-down sec-chev"></i>
       </div>
       <div class="nav-section-body" id="sec-performance-body">
-        <div class="nav-item" data-tooltip="Revenue not billed within 3 days of SOB" onclick="setPage('revenue-not-billed','Revenue Not Billed within 3 Days of SOB','Job: Revenue, Cost &amp; Profit',this)">
-          <i class="ti ti-receipt"></i><span class="nav-item-label">Revenue Not Billed within 3 Days of SOB</span><span class="nav-badge hidden" id="badge-revenue-not-billed-2">0</span>
+        <div class="nav-item" data-tooltip="Jobs with a revenue gap between Estimated and Actual" onclick="setPage('revenue-not-billed','Billing Pendency','Billing &amp; Ops Control',this)">
+          <i class="ti ti-receipt"></i><span class="nav-item-label">Billing Pendency</span><span class="nav-badge hidden" id="badge-revenue-not-billed-2">0</span>
         </div>
-        <div class="nav-item" data-tooltip="Cost not posted within 7 days of SOB" onclick="setPage('cost-not-posted','Cost Not Posted within 7 Days of SOB','Job: Revenue, Cost &amp; Profit',this)">
-          <i class="ti ti-coins"></i><span class="nav-item-label">Cost Not Posted within 7 Days of SOB</span><span class="nav-badge hidden" id="badge-cost-not-posted-2">0</span>
+        <div class="nav-item" data-tooltip="Jobs eligible for Ops Lock closure, ETD/ETA +7 days passed, still not locked" onclick="setPage('ops-lock-pendency','Ops Lock Pendency (ETD+7)','Billing &amp; Ops Control',this)">
+          <i class="ti ti-lock-open"></i><span class="nav-item-label">Ops Lock Pendency (ETD+7)</span><span class="nav-badge hidden" id="badge-ops-lock-pendency-2">0</span>
+        </div>
+        <div class="nav-item" data-tooltip="Ops-locked jobs where cost is still pending" onclick="setPage('cost-not-posted','Jobs Locked with Pending Cost','Billing &amp; Ops Control',this)">
+          <i class="ti ti-coins"></i><span class="nav-item-label">Jobs Locked with Pending Cost</span><span class="nav-badge hidden" id="badge-cost-not-posted-2">0</span>
         </div>
       </div><!-- /sec-performance-body -->
 
@@ -1234,104 +1234,104 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
       
 
       <!-- PAGE: Open Jobs -->
-      <div class="page" id="page-open-jobs">
-        <div class="filter-bar" id="filterbar-open-jobs">
+      <div class="page" id="page-ops-lock-pendency">
+        <div class="filter-bar" id="filterbar-ops-lock-pendency">
           <span class="filter-label">Report View</span>
-          <select class="filter-select" id="view-open-jobs" onchange="onViewChange('open-jobs')">
+          <select class="filter-select" id="view-ops-lock-pendency" onchange="onViewChange('ops-lock-pendency')">
             <option value="monthly">Monthly View</option>
             <option value="weekly">Weekly View</option>
             <option value="quarterly">Quarterly View</option>
             <option value="yearly">Yearly View</option>
             <option value="custom">Custom Range</option>
           </select>
-          <div id="fc-monthly-open-jobs" style="display:flex;align-items:center;gap:8px">
+          <div id="fc-monthly-ops-lock-pendency" style="display:flex;align-items:center;gap:8px">
             <span class="filter-label">From</span>
-            <div class="mp-wrap"><div class="mp-trigger" onclick="togglePicker('mp-from-open-jobs')"><i class="ti ti-calendar-event"></i><span id="mp-from-open-jobs-lbl">Pick Month</span></div><div class="mp-dropdown hidden" id="mp-from-open-jobs"></div></div>
+            <div class="mp-wrap"><div class="mp-trigger" onclick="togglePicker('mp-from-ops-lock-pendency')"><i class="ti ti-calendar-event"></i><span id="mp-from-ops-lock-pendency-lbl">Pick Month</span></div><div class="mp-dropdown hidden" id="mp-from-ops-lock-pendency"></div></div>
             <span class="filter-label">To</span>
-            <div class="mp-wrap"><div class="mp-trigger" onclick="togglePicker('mp-to-open-jobs')"><i class="ti ti-calendar-event"></i><span id="mp-to-open-jobs-lbl">Pick Month</span></div><div class="mp-dropdown hidden" id="mp-to-open-jobs"></div></div>
+            <div class="mp-wrap"><div class="mp-trigger" onclick="togglePicker('mp-to-ops-lock-pendency')"><i class="ti ti-calendar-event"></i><span id="mp-to-ops-lock-pendency-lbl">Pick Month</span></div><div class="mp-dropdown hidden" id="mp-to-ops-lock-pendency"></div></div>
           </div>
-          <div id="fc-weekly-open-jobs" style="display:none;align-items:center;gap:8px">
+          <div id="fc-weekly-ops-lock-pendency" style="display:none;align-items:center;gap:8px">
             <span class="filter-label">Month</span>
-            <div class="mp-wrap"><div class="mp-trigger" onclick="togglePicker('mp-wk-open-jobs')"><i class="ti ti-calendar-event"></i><span id="mp-wk-open-jobs-lbl">Pick Month</span></div><div class="mp-dropdown hidden" id="mp-wk-open-jobs"></div></div>
+            <div class="mp-wrap"><div class="mp-trigger" onclick="togglePicker('mp-wk-ops-lock-pendency')"><i class="ti ti-calendar-event"></i><span id="mp-wk-ops-lock-pendency-lbl">Pick Month</span></div><div class="mp-dropdown hidden" id="mp-wk-ops-lock-pendency"></div></div>
           </div>
-          <div id="fc-quarterly-open-jobs" style="display:none;align-items:center;gap:8px">
+          <div id="fc-quarterly-ops-lock-pendency" style="display:none;align-items:center;gap:8px">
             <span class="filter-label">Quarter</span>
-            <select class="filter-select" id="quarter-open-jobs" onchange="renderPage('open-jobs')" style="min-width:160px">
+            <select class="filter-select" id="quarter-ops-lock-pendency" onchange="renderPage('ops-lock-pendency')" style="min-width:160px">
               <option value="1">Q1 (Jan – Mar)</option>
               <option value="2">Q2 (Apr – Jun)</option>
               <option value="3">Q3 (Jul – Sep)</option>
               <option value="4">Q4 (Oct – Dec)</option>
             </select>
           </div>
-          <div id="fc-yearly-open-jobs" style="display:none;align-items:center;gap:8px">
+          <div id="fc-yearly-ops-lock-pendency" style="display:none;align-items:center;gap:8px">
             <span class="filter-label">Financial Year</span>
-            <span id="fy-label-open-jobs" style="font-size:12px;color:var(--text2);font-weight:500">Auto-detected</span>
+            <span id="fy-label-ops-lock-pendency" style="font-size:12px;color:var(--text2);font-weight:500">Auto-detected</span>
           </div>
-          <div id="fc-custom-open-jobs" style="display:none;align-items:center;gap:8px">
+          <div id="fc-custom-ops-lock-pendency" style="display:none;align-items:center;gap:8px">
             <span class="filter-label">From</span>
-            <div class="dp-wrap"><div class="dp-trigger" onclick="togglePicker('dp-cfrom-open-jobs')"><i class="ti ti-calendar-event"></i><span id="dp-cfrom-open-jobs-lbl" class="dp-placeholder">Pick Date</span></div><div class="dp-dropdown hidden" id="dp-cfrom-open-jobs"></div></div>
+            <div class="dp-wrap"><div class="dp-trigger" onclick="togglePicker('dp-cfrom-ops-lock-pendency')"><i class="ti ti-calendar-event"></i><span id="dp-cfrom-ops-lock-pendency-lbl" class="dp-placeholder">Pick Date</span></div><div class="dp-dropdown hidden" id="dp-cfrom-ops-lock-pendency"></div></div>
             <span class="filter-sep">–</span>
             <span class="filter-label">To</span>
-            <div class="dp-wrap"><div class="dp-trigger" onclick="togglePicker('dp-cto-open-jobs')"><i class="ti ti-calendar-event"></i><span id="dp-cto-open-jobs-lbl" class="dp-placeholder">Pick Date</span></div><div class="dp-dropdown hidden" id="dp-cto-open-jobs"></div></div>
+            <div class="dp-wrap"><div class="dp-trigger" onclick="togglePicker('dp-cto-ops-lock-pendency')"><i class="ti ti-calendar-event"></i><span id="dp-cto-ops-lock-pendency-lbl" class="dp-placeholder">Pick Date</span></div><div class="dp-dropdown hidden" id="dp-cto-ops-lock-pendency"></div></div>
           </div>
-          <div class="add-filters-wrap" id="afw-open-jobs">
-            <button class="add-filters-btn" id="afb-open-jobs" onclick="toggleAddFilters('open-jobs')">
+          <div class="add-filters-wrap" id="afw-ops-lock-pendency">
+            <button class="add-filters-btn" id="afb-ops-lock-pendency" onclick="toggleAddFilters('ops-lock-pendency')">
               <i class="ti ti-adjustments-horizontal" style="font-size:13px"></i> Filters
             </button>
-            <div class="add-filters-panel" id="afp-open-jobs">
+            <div class="add-filters-panel" id="afp-ops-lock-pendency">
               <div class="add-filter-row">
                 <div class="add-filter-label">Branch</div>
-                <div class="ms-wrap" id="msw-branch-open-jobs" style="width:100%">
-                  <div class="ms-trigger" onclick="toggleMs('branch-open-jobs')" style="width:100%;box-sizing:border-box"><i class="ti ti-building ms-icon"></i><span class="ms-label" id="msl-branch-open-jobs">All Branches</span><i class="ti ti-chevron-down ms-caret"></i></div>
-                  <div class="ms-dropdown" id="msd-branch-open-jobs"></div>
+                <div class="ms-wrap" id="msw-branch-ops-lock-pendency" style="width:100%">
+                  <div class="ms-trigger" onclick="toggleMs('branch-ops-lock-pendency')" style="width:100%;box-sizing:border-box"><i class="ti ti-building ms-icon"></i><span class="ms-label" id="msl-branch-ops-lock-pendency">All Branches</span><i class="ti ti-chevron-down ms-caret"></i></div>
+                  <div class="ms-dropdown" id="msd-branch-ops-lock-pendency"></div>
                 </div>
               </div>
               <div class="add-filter-row">
                 <div class="add-filter-label">Job Owner</div>
-                <div class="ms-wrap" id="msw-owner-open-jobs" style="width:100%">
-                  <div class="ms-trigger" onclick="toggleMs('owner-open-jobs')" style="width:100%;box-sizing:border-box"><i class="ti ti-user ms-icon"></i><span class="ms-label" id="msl-owner-open-jobs">All Owners</span><i class="ti ti-chevron-down ms-caret"></i></div>
-                  <div class="ms-dropdown" id="msd-owner-open-jobs"></div>
+                <div class="ms-wrap" id="msw-owner-ops-lock-pendency" style="width:100%">
+                  <div class="ms-trigger" onclick="toggleMs('owner-ops-lock-pendency')" style="width:100%;box-sizing:border-box"><i class="ti ti-user ms-icon"></i><span class="ms-label" id="msl-owner-ops-lock-pendency">All Owners</span><i class="ti ti-chevron-down ms-caret"></i></div>
+                  <div class="ms-dropdown" id="msd-owner-ops-lock-pendency"></div>
                 </div>
               </div>
             </div>
           </div>
-          <button class="dv-btn" onclick="refreshData('open-jobs')" style="display:inline-flex;align-items:center;gap:5px"><i class="ti ti-refresh" style="font-size:13px"></i> Refresh</button>
+          <button class="dv-btn" onclick="refreshData('ops-lock-pendency')" style="display:inline-flex;align-items:center;gap:5px"><i class="ti ti-refresh" style="font-size:13px"></i> Refresh</button>
         </div>
 
         <div class="kpi-row">
           <div class="kpi blue">
-            <div class="kpi-top"><i class="kpi-icon-sm ti ti-chart-bar blue"></i><span class="kpi-lbl">Total Jobs</span></div>
-            <div class="kpi-val blue" id="kv-oj-total">—</div>
-            <div class="kpi-sub" id="kv-oj-period">All jobs in period</div>
+            <div class="kpi-top"><i class="kpi-icon-sm ti ti-chart-bar blue"></i><span class="kpi-lbl">Eligible Jobs</span></div>
+            <div class="kpi-val blue" id="kv-olp-total">—</div>
+            <div class="kpi-sub" id="kv-olp-period">Eligible for closure, ETD/ETA +7 days passed</div>
           </div>
           <div class="kpi orange">
-            <div class="kpi-top"><span class="kpi-dot orange"></span><span class="kpi-lbl">Open Jobs</span></div>
-            <div class="kpi-val orange" id="kv-oj-flagged">—</div>
-            <div class="kpi-sub">Jobs not CMP or CLS</div>
+            <div class="kpi-top"><span class="kpi-dot orange"></span><span class="kpi-lbl">Ops Lock Pending</span></div>
+            <div class="kpi-val orange" id="kv-olp-flagged">—</div>
+            <div class="kpi-sub">Ops Lock not yet set</div>
           </div>
           <div class="kpi red">
             <div class="kpi-top"><i class="kpi-icon-sm ti ti-percentage red"></i><span class="kpi-lbl">% of such jobs</span></div>
-            <div class="kpi-val red" id="kv-oj-pct">—</div>
-            <div class="kpi-sub" id="kv-oj-pct-sub">% of total jobs</div>
+            <div class="kpi-val red" id="kv-olp-pct">—</div>
+            <div class="kpi-sub" id="kv-olp-pct-sub">% of total jobs</div>
           </div>
         </div>
 
         <div class="sec-hd">
-          <div class="sec-title">Branch › Job Owner — Open Jobs (Status not CMP or CLS)</div>
+          <div class="sec-title">Branch › Job Owner — Ops Lock Pendency (ETD/ETA +7 days, not yet locked)</div>
           <div style="display:flex;align-items:center;gap:6px">
-            <div class="sec-ct" id="sc-open-jobs">Loading…</div>
+            <div class="sec-ct" id="sc-ops-lock-pendency">Loading…</div>
             <div style="width:1px;height:14px;background:var(--border);margin:0 2px"></div>
-            <button class="ec-btn" onclick="expandAll('open-jobs')"><i class="ti ti-chevrons-down" style="font-size:12px"></i> Expand All</button>
-            <button class="ec-btn" onclick="collapseAll('open-jobs')"><i class="ti ti-chevrons-up" style="font-size:12px"></i> Collapse All</button>
+            <button class="ec-btn" onclick="expandAll('ops-lock-pendency')"><i class="ti ti-chevrons-down" style="font-size:12px"></i> Expand All</button>
+            <button class="ec-btn" onclick="collapseAll('ops-lock-pendency')"><i class="ti ti-chevrons-up" style="font-size:12px"></i> Collapse All</button>
           </div>
         </div>
         <div class="tbl-wrap">
-          <table id="tbl-open-jobs">
-            <thead><tr id="thead-open-jobs">
+          <table id="tbl-ops-lock-pendency">
+            <thead><tr id="thead-ops-lock-pendency">
               <th style="min-width:170px">Branch / Job Owner</th>
               <th class="col-grand">Grand Total</th>
             </tr></thead>
-            <tbody id="tbody-open-jobs"><tr><td colspan="99" style="text-align:center;padding:32px;color:var(--text3)">Loading data…</td></tr></tbody>
+            <tbody id="tbody-ops-lock-pendency"><tr><td colspan="99" style="text-align:center;padding:32px;color:var(--text3)">Loading data…</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -1813,7 +1813,7 @@ function updateMainMetricsBadges() {
   // additional-filter logic), instead of a hand-duplicated calculation
   // that could drift out of sync.
   const renderFns = [
-    renderUnbilledRev, renderUnpostedCost, renderOpenJobs
+    renderUnbilledRev, renderUnpostedCost, renderOpsLockPendency
   ];
   renderFns.forEach(fn => { try { fn(); } catch(e) { console.warn('[badges] render failed:', fn.name, e); } });
 }
@@ -2728,7 +2728,7 @@ let lastFilterPageDivId = null;
 // settings from whichever page was previously active onto
 // the page being switched to, matched purely by each page's id suffix on
 // pickerState/msState keys and element ids (e.g. "mp-from-summary" ->
-// "mp-from-open-jobs"). This makes filter changes universal across pages
+// "mp-from-ops-lock-pendency"). This makes filter changes universal across pages
 // instead of resetting per page, until the user explicitly changes them again.
 function syncUniversalFilters(oldSuffix, newSuffix) {
   // Date pickers: monthly from/to, weekly month, custom from/to
@@ -2832,7 +2832,7 @@ function setPage(pageId, title, group, el) {
   if (pageId === 'usage') loadUsageAnalytics();
   if (pageId === 'feedback') loadFeedback();
   // Render report pages lazily — only when the user actually navigates to them
-  const reportPages = ['summary','open-jobs','total-jobs','unbilled-rev','unposted-cost','revenue-not-billed','cost-not-posted']; // trimmed to the pages that actually exist and render (some ids are aliases of the same div - see pageIdMap above); job-profit/low-profit removed per request
+  const reportPages = ['summary','ops-lock-pendency','total-jobs','unbilled-rev','unposted-cost','revenue-not-billed','cost-not-posted']; // trimmed to the pages that actually exist and render (some ids are aliases of the same div - see pageIdMap above)
   if (reportPages.includes(pageId) && allSRR.length) renderPage(pageId);
   logUsage(pageId);
   setTimeout(convertAllSelects, 50);
@@ -3343,10 +3343,10 @@ function toggleRows(key, event) {
 }
 
 function renderPage(pageId) {
-  // ── USA Ops — 8 pages only ──────────────────────────
+  // ── Air Ops — 7 pages ──────────────────────────
   if (pageId === 'summary')            renderSummary();
   if (pageId === 'total-jobs')         renderTotalJobs();
-  if (pageId === 'open-jobs')          renderOpenJobs();
+  if (pageId === 'ops-lock-pendency')  renderOpsLockPendency();
   if (pageId === 'revenue-not-billed' || pageId === 'unbilled-rev') renderUnbilledRev();
   if (pageId === 'cost-not-posted'    || pageId === 'unposted-cost') renderUnpostedCost();
 }
@@ -3434,32 +3434,31 @@ function renderTotalJobs() {
   if (!Object.keys(totalMap).length) h = '<tr><td colspan="99" style="text-align:center;padding:32px;color:var(--text3)">No data for this period.</td></tr>';
   const tbody = document.getElementById('tbody-total-jobs'); if (tbody) tbody.innerHTML = h;
 }
-function renderOpenJobs() {
-  const pageId = 'open-jobs';
+function renderOpsLockPendency() {
+  const pageId = 'ops-lock-pendency';
   const { cols, label, view } = getColumns(pageId);
   // Hide/show scorecards and grand total based on view
-  const _kpiRow = document.querySelector('#page-open-jobs .kpi-row');
+  const _kpiRow = document.querySelector('#page-ops-lock-pendency .kpi-row');
   if (_kpiRow) _kpiRow.style.display = showScorecards(view) ? '' : 'none';
   const filtered  = filterByDate(allSRR, pageId);
   let filteredDD = applyAdditionalFilters(applyDropdownFilters(filtered, pageId), pageId);
 
-  // Only show open jobs whose ETD is older than 7 days — jobs shipped
-  // within the last 7 days are expected to still be open, that's normal
-  const ojCutoff = new Date();
-  ojCutoff.setHours(0,0,0,0);
-  ojCutoff.setDate(ojCutoff.getDate() - 7);
+  // Ops Lock Pendency (ETD+7), per the requirements doc: eligible for
+  // closure (today >= latest ETD/ETA + 7 calendar days) AND Ops Lock not
+  // yet set (Operation Lock Date blank - no separate Yes/No status field
+  // exists in the data, so "date filled in" = locked, same convention used
+  // for Financial Lock elsewhere)
+  const today = new Date();
+  today.setHours(0,0,0,0);
 
   const flaggedDD = filteredDD.filter(r => {
-    if (r.jobDate !== undefined) {
-      // USA (LogiSys/JPA schema) — Open = Operation Lock Date blank, confirmed
-      // definition. No 7-day grace period here - that's an Indonesia-specific
-      // rule not part of USA's requirement doc; SLA aging is a separate,
-      // later concern on top of this count, not baked into it.
-      return !r.operationLockDate || String(r.operationLockDate).trim() === '';
-    }
-    if (['CMP','CLS'].includes((r.jobStatus||'').toUpperCase())) return false;
-    const etd = r.etdDate ? new Date(r.etdDate) : null;
-    return etd && etd < ojCutoff;
+    const isLocked = r.operationLockDate && String(r.operationLockDate).trim() !== '';
+    if (isLocked) return false;
+    const etdEta = r.etdEtaNew ? new Date(r.etdEtaNew) : null;
+    if (!etdEta || isNaN(etdEta)) return false;
+    const trigger = new Date(etdEta);
+    trigger.setDate(trigger.getDate() + 7);
+    return today >= trigger;
   });
 
   const totalJobs    = filteredDD.length;
@@ -3469,16 +3468,16 @@ function renderOpenJobs() {
   populateFilters(pageId, filteredDD);
 
   // Scorecards — clickable
-  const kT = document.getElementById('kv-oj-total');
-  if (kT) { kT.textContent = totalJobs.toLocaleString(); kT.style.cursor='pointer'; kT.onclick=()=>openDrill(filteredDD,'Total Jobs',label); }
-  const kF = document.getElementById('kv-oj-flagged');
-  if (kF) { kF.textContent = flaggedCount.toLocaleString(); kF.style.cursor='pointer'; kF.onclick=()=>openDrill(flaggedDD,'Open Jobs',label); }
-  const kP = document.getElementById('kv-oj-pct');
-  if (kP) { kP.textContent = pct+'%'; kP.style.cursor='pointer'; kP.onclick=()=>openDrill(flaggedDD,'Open Jobs',label); }
-  const kPer = document.getElementById('kv-oj-period');   if (kPer) kPer.textContent = label;
-  const kSub = document.getElementById('kv-oj-pct-sub');  if (kSub) kSub.textContent = flaggedCount+' of '+totalJobs+' jobs';
-  const sc   = document.getElementById('sc-open-jobs');   if (sc) sc.textContent = totalJobs.toLocaleString()+' total · '+flaggedCount.toLocaleString()+' open';
-  setBadge('open-jobs', flaggedCount);
+  const kT = document.getElementById('kv-olp-total');
+  if (kT) { kT.textContent = totalJobs.toLocaleString(); kT.style.cursor='pointer'; kT.onclick=()=>openDrill(filteredDD,'Eligible Jobs',label); }
+  const kF = document.getElementById('kv-olp-flagged');
+  if (kF) { kF.textContent = flaggedCount.toLocaleString(); kF.style.cursor='pointer'; kF.onclick=()=>openDrill(flaggedDD,'Ops Lock Pendency',label); }
+  const kP = document.getElementById('kv-olp-pct');
+  if (kP) { kP.textContent = pct+'%'; kP.style.cursor='pointer'; kP.onclick=()=>openDrill(flaggedDD,'Ops Lock Pendency',label); }
+  const kPer = document.getElementById('kv-olp-period');   if (kPer) kPer.textContent = label;
+  const kSub = document.getElementById('kv-olp-pct-sub');  if (kSub) kSub.textContent = flaggedCount+' of '+totalJobs+' jobs';
+  const sc   = document.getElementById('sc-ops-lock-pendency');   if (sc) sc.textContent = totalJobs.toLocaleString()+' eligible · '+flaggedCount.toLocaleString()+' pending';
+  setBadge('ops-lock-pendency', flaggedCount);
 
   // Build flaggedMap only
   const flaggedMap = {};
@@ -3495,38 +3494,38 @@ function renderOpenJobs() {
   flaggedDD.forEach(r=>{ const ck=colKeyFn(r); if(gtFl[ck]!==undefined)gtFl[ck]++; gtFlGrand++; if(!cRFl[ck])cRFl[ck]=[]; cRFl[ck].push(r); });
 
   const isSingle = cols.length===1 && cols[0].single;
-  const tbl=document.getElementById('tbl-open-jobs'); if(tbl)tbl.classList.toggle('single-col',isSingle);
-  const thead=document.getElementById('thead-open-jobs');
+  const tbl=document.getElementById('tbl-ops-lock-pendency'); if(tbl)tbl.classList.toggle('single-col',isSingle);
+  const thead=document.getElementById('thead-ops-lock-pendency');
   if(thead) thead.innerHTML='<th style="min-width:260px">Branch / Job Owner</th>'+(isSingle?'':`<th class="col-grand">Grand Total</th>`)+cols.map(c=>`<th style="min-width:${isSingle?'300':'100'}px;text-align:right">${c.label}</th>`).join('');
 
   const gtFlagId=dvReg(flaggedDD);
-  const gFTd=isSingle?'':`<td class="col-grand" style="cursor:pointer" onclick="dvOpen('${gtFlagId}','Grand Total — Open Jobs','${label}')">${gtFlGrand>0?gtFlGrand.toLocaleString():'<span class="dash">—</span>'}</td>`;
+  const gFTd=isSingle?'':`<td class="col-grand" style="cursor:pointer" onclick="dvOpen('${gtFlagId}','Grand Total — Ops Lock Pendency','${label}')">${gtFlGrand>0?gtFlGrand.toLocaleString():'<span class="dash">—</span>'}</td>`;
 
-  let h=`<tr class="gt-block"><td style="padding-left:10px"><i class="rc open" id="rc-gt-oj" onclick="toggleRows('gt-oj',event)">▼</i> <strong>GRAND TOTAL</strong></td>${gFTd}${colCells(gtFl,flaggedDD,cols,colKeyFn,'Grand Total — Open Jobs',label,'DV_COLS_OPEN_JOBS')}</tr>
+  let h=`<tr class="gt-block"><td style="padding-left:10px"><i class="rc open" id="rc-gt-olp" onclick="toggleRows('gt-olp',event)">▼</i> <strong>GRAND TOTAL</strong></td>${gFTd}${colCells(gtFl,flaggedDD,cols,colKeyFn,'Grand Total — Ops Lock Pendency',label,'DV_COLS_OPEN_JOBS')}</tr>
   <tr class="gt-sep"><td colspan="${cols.length+(isSingle?1:2)}"></td></tr>`;
 
   Object.keys(flaggedMap).sort().forEach((br,bi)=>{
-    const bKey='oj'+bi, owMap=flaggedMap[br]||{};
+    const bKey='olp'+bi, owMap=flaggedMap[br]||{};
     const brFlagRecs=flaggedDD.filter(r=>(r.jobBranch||r.branch|| r.location || '(No Branch)')===br);
     const brFlId=dvReg(brFlagRecs), safeBr=br.replace(/'/g,"\\'");
     const brFl={}; cols.forEach(c=>{brFl[c.key]=0;}); let bFG=0;
     Object.values(owMap).forEach(oc=>{cols.forEach(c=>{brFl[c.key]+=(oc[c.key]||0);}); bFG+=Object.values(oc).reduce((a,b)=>a+b,0);});
     const av=`<span class="av" style="background:${avColor(br)}">${avInitials(br)}</span>`;
-    const bF=isSingle?'':`<td class="col-grand" style="cursor:pointer" onclick="dvOpen('${brFlId}','${safeBr} — Open Jobs','${label}')">${bFG>0?bFG.toLocaleString():'<span class="dash">—</span>'}</td>`;
-    h+=`<tr class="br-row"><td>${av}<i class="rc" id="rc-${bKey}" onclick="toggleRows('${bKey}',event)">▶</i> ${br}</td>${bF}${colCells(brFl,brFlagRecs,cols,colKeyFn,safeBr+' — Open Jobs',label,'DV_COLS_OPEN_JOBS')}</tr>`;
+    const bF=isSingle?'':`<td class="col-grand" style="cursor:pointer" onclick="dvOpen('${brFlId}','${safeBr} — Ops Lock Pendency','${label}')">${bFG>0?bFG.toLocaleString():'<span class="dash">—</span>'}</td>`;
+    h+=`<tr class="br-row"><td>${av}<i class="rc" id="rc-${bKey}" onclick="toggleRows('${bKey}',event)">▶</i> ${br}</td>${bF}${colCells(brFl,brFlagRecs,cols,colKeyFn,safeBr+' — Ops Lock Pendency',label,'DV_COLS_OPEN_JOBS')}</tr>`;
     Object.keys(owMap).sort().forEach((ow,oi)=>{
       const owKey=bKey+'o'+oi, owC=owMap[ow]||{};
       const owFRecs=brFlagRecs.filter(r=>(r.operator||r.jobOwner||'(Unknown)')===ow);
       const owFlId=dvReg(owFRecs), safeOw=ow.replace(/'/g,"\\'");
       let oFG=0; cols.forEach(c=>{oFG+=(owC[c.key]||0);});
       const oav=`<span class="av" style="background:${avColor(ow)}">${avInitials(ow)}</span>`;
-      const jF=isSingle?'':`<td class="col-grand" style="cursor:pointer" onclick="dvOpen('${owFlId}','${safeOw} — Open Jobs','${label}')">${oFG>0?oFG.toLocaleString():'<span class="dash">—</span>'}</td>`;
-      h+=`<tr class="jo-row r-br-${bKey} r-hidden" data-grp="${bKey}"><td>${oav}${ow} <span style="font-size:10px;color:var(--text3);margin-left:4px">(Job Owner)</span></td>${jF}${colCells(owC,owFRecs,cols,colKeyFn,safeOw+' — Open Jobs',label,'DV_COLS_OPEN_JOBS')}</tr>`;
+      const jF=isSingle?'':`<td class="col-grand" style="cursor:pointer" onclick="dvOpen('${owFlId}','${safeOw} — Ops Lock Pendency','${label}')">${oFG>0?oFG.toLocaleString():'<span class="dash">—</span>'}</td>`;
+      h+=`<tr class="jo-row r-br-${bKey} r-hidden" data-grp="${bKey}"><td>${oav}${ow} <span style="font-size:10px;color:var(--text3);margin-left:4px">(Job Owner)</span></td>${jF}${colCells(owC,owFRecs,cols,colKeyFn,safeOw+' — Ops Lock Pendency',label,'DV_COLS_OPEN_JOBS')}</tr>`;
     });
   });
 
-  if(!Object.keys(flaggedMap).length) h='<tr><td colspan="99" style="text-align:center;padding:32px;color:var(--text3)">No open jobs for this period. ✅</td></tr>';
-  const tbody=document.getElementById('tbody-open-jobs'); if(tbody)tbody.innerHTML=h;
+  if(!Object.keys(flaggedMap).length) h='<tr><td colspan="99" style="text-align:center;padding:32px;color:var(--text3)">No Ops Lock pendency for this period. ✅</td></tr>';
+  const tbody=document.getElementById('tbody-ops-lock-pendency'); if(tbody)tbody.innerHTML=h;
 }
 
 function setBadge(pageId, count) {
@@ -5072,7 +5071,7 @@ async function loadData() {
     setTimeout(markDataUpdated, 500);
     setTimeout(convertAllSelects, 600);
 
-    const ALL_REPORT_PAGES = ['job-unlinked','ol-delay','open-jobs','total-jobs','unbilled-rev','unposted-cost','inv-delay','ams','hbl-not-released','mbl-not-released','pre-alert-delay','si-not-submitted','vendor-payment-delay','sob-blank','mbl-type-blank','hbl-type-blank','mbl-col-hbl-pre','mbl-col-hbl-col','mbl-pre-hbl-pre','mbl-pre-hbl-col','perf-ol','perf-hbl','perf-mbl','perf-prealert','perf-inv','perf-si','perf-vendor-payment','summary'];
+    const ALL_REPORT_PAGES = ['job-unlinked','ol-delay','ops-lock-pendency','total-jobs','unbilled-rev','unposted-cost','inv-delay','ams','hbl-not-released','mbl-not-released','pre-alert-delay','si-not-submitted','vendor-payment-delay','sob-blank','mbl-type-blank','hbl-type-blank','mbl-col-hbl-pre','mbl-col-hbl-col','mbl-pre-hbl-pre','mbl-pre-hbl-col','perf-ol','perf-hbl','perf-mbl','perf-prealert','perf-inv','perf-si','perf-vendor-payment','summary'];
 
     // Init filter dropdowns for all pages (cheap — just populates date pickers/selects)
     ALL_REPORT_PAGES.forEach(pageId => { initFilters(pageId); });
@@ -6039,21 +6038,27 @@ async function confirmDeleteUser(email) {
 
 const SUMMARY_REPORTS = [
   {
-    id:      'open-jobs',
-    title:   'Open Jobs',
+    id:      'ops-lock-pendency',
+    title:   'Ops Lock Pendency (ETD+7)',
     color:   '#dc2626',
     okColor: '#16a34a',
     flag:    r => {
-      // USA (LogiSys/JPA schema) - confirmed definition: Open = Operation
-      // Lock Date blank. jobStatus doesn't exist for USA, so the old check
-      // always evaluated true (flagging 100% of jobs as open, always)
-      if (r.jobDate !== undefined) return !r.operationLockDate || String(r.operationLockDate).trim() === '';
-      return !['CMP','CLS'].includes((r.jobStatus||'').toUpperCase());
+      // Eligible for closure (today >= latest ETD/ETA + 7 days) AND Ops
+      // Lock not yet set (Operation Lock Date blank) - matches
+      // renderOpsLockPendency()'s definition exactly
+      const isLocked = r.operationLockDate && String(r.operationLockDate).trim() !== '';
+      if (isLocked) return false;
+      const etdEta = r.etdEtaNew ? new Date(r.etdEtaNew) : null;
+      if (!etdEta || isNaN(etdEta)) return false;
+      const trigger = new Date(etdEta);
+      trigger.setDate(trigger.getDate() + 7);
+      const today = new Date(); today.setHours(0,0,0,0);
+      return today >= trigger;
     },
   },
   {
     id:      'revenue-not-billed',
-    title:   'Revenue Not Billed within 3 Days of SOB',
+    title:   'Billing Pendency',
     color:   '#dc2626',
     okColor: '#16a34a',
     flag:    r => {
@@ -6065,7 +6070,7 @@ const SUMMARY_REPORTS = [
   },
   {
     id:      'cost-not-posted',
-    title:   'Cost Not Posted within 7 Days of SOB',
+    title:   'Jobs Locked with Pending Cost',
     color:   '#dc2626',
     okColor: '#16a34a',
     flag:    r => {
