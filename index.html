@@ -3402,10 +3402,10 @@ function renderTotalJobs() {
   const sc = document.getElementById('sc-total-jobs');
   if (sc) sc.textContent = totalCount.toLocaleString() + ' total jobs';
 
-  // Build totalMap: branch → owner → col counts
+  // Build totalMap: zone → owner → col counts
   const totalMap = {};
   filtered.forEach(r => {
-    const br = r.jobBranch || r.branch   || r.location || '(No Branch)';
+    const br = r.zone || '(Unmapped)';
     const ow = r.operator  || r.jobOwner || '(Unknown)';
     const ck = getColKey(r, view) || 'other';
     if (!totalMap[br]) totalMap[br] = {};
@@ -3428,7 +3428,7 @@ function renderTotalJobs() {
   const isSingle = (cols.length === 1 && cols[0].single) || !showGrandTotal(view);
   const tbl = document.getElementById('tbl-total-jobs'); if (tbl) tbl.classList.toggle('single-col', isSingle);
   const thead = document.getElementById('thead-total-jobs');
-  if (thead) thead.innerHTML = '<th style="min-width:260px">Branch / Job Owner</th>' +
+  if (thead) thead.innerHTML = '<th style="min-width:260px">Zone / Job Owner</th>' +
     (isSingle ? '' : '<th class="col-grand">Grand Total</th>') +
     cols.map(c => `<th style="min-width:${isSingle?'300':'100'}px;text-align:right">${c.label}</th>`).join('');
 
@@ -3445,7 +3445,7 @@ function renderTotalJobs() {
   Object.keys(totalMap).sort().forEach((br, bi) => {
     const bKey  = 'tj' + bi;
     const owMap = totalMap[br] || {};
-    const brRecs = filtered.filter(r => (r.jobBranch || r.branch || r.location || '(No Branch)') === br);
+    const brRecs = filtered.filter(r => (r.zone || '(Unmapped)') === br);
     const brId   = dvReg(brRecs);
     const safeBr = br.replace(/'/g, "\\'");
     const brTo   = {}; cols.forEach(c => { brTo[c.key] = 0; }); let brGrand = 0;
@@ -3518,7 +3518,7 @@ function renderOpsLockPendency() {
   // Build flaggedMap only
   const flaggedMap = {};
   flaggedDD.forEach(r => {
-    const br=r.jobBranch||r.branch|| r.location || '(No Branch)', ow=r.operator||r.jobOwner||'(Unknown)', ck=getColKey(r,view)||'other';
+    const br=r.zone||'(Unmapped)', ow=r.operator||r.jobOwner||'(Unknown)', ck=getColKey(r,view)||'other';
     if (!flaggedMap[br]) flaggedMap[br]={};
     if (!flaggedMap[br][ow]) flaggedMap[br][ow]={};
     flaggedMap[br][ow][ck]=(flaggedMap[br][ow][ck]||0)+1;
@@ -3532,7 +3532,7 @@ function renderOpsLockPendency() {
   const isSingle = cols.length===1 && cols[0].single;
   const tbl=document.getElementById('tbl-ops-lock-pendency'); if(tbl)tbl.classList.toggle('single-col',isSingle);
   const thead=document.getElementById('thead-ops-lock-pendency');
-  if(thead) thead.innerHTML='<th style="min-width:260px">Branch / Job Owner</th>'+(isSingle?'':`<th class="col-grand">Grand Total</th>`)+cols.map(c=>`<th style="min-width:${isSingle?'300':'100'}px;text-align:right">${c.label}</th>`).join('');
+  if(thead) thead.innerHTML='<th style="min-width:260px">Zone / Job Owner</th>'+(isSingle?'':`<th class="col-grand">Grand Total</th>`)+cols.map(c=>`<th style="min-width:${isSingle?'300':'100'}px;text-align:right">${c.label}</th>`).join('');
 
   const gtFlagId=dvReg(flaggedDD);
   const gFTd=isSingle?'':`<td class="col-grand" style="cursor:pointer" onclick="dvOpen('${gtFlagId}','Grand Total — Ops Lock Pendency','${label}')">${gtFlGrand>0?gtFlGrand.toLocaleString():'<span class="dash">—</span>'}</td>`;
@@ -3542,7 +3542,7 @@ function renderOpsLockPendency() {
 
   Object.keys(flaggedMap).sort().forEach((br,bi)=>{
     const bKey='olp'+bi, owMap=flaggedMap[br]||{};
-    const brFlagRecs=flaggedDD.filter(r=>(r.jobBranch||r.branch|| r.location || '(No Branch)')===br);
+    const brFlagRecs=flaggedDD.filter(r=>(r.zone||'(Unmapped)')===br);
     const brFlId=dvReg(brFlagRecs), safeBr=br.replace(/'/g,"\\'");
     const brFl={}; cols.forEach(c=>{brFl[c.key]=0;}); let bFG=0;
     Object.values(owMap).forEach(oc=>{cols.forEach(c=>{brFl[c.key]+=(oc[c.key]||0);}); bFG+=Object.values(oc).reduce((a,b)=>a+b,0);});
@@ -3846,6 +3846,7 @@ function groupEtdEtaByShipment(filteredDD, sumField) {
       byShipment[r.shipmentId] = {
         shipmentId: r.shipmentId,
         location: r.location || '(No Branch)',
+        zone: r.zone || '(Unmapped)',
         jobOwner: r.jobOwner || '(Unknown)',
         etdEtaNew: r.etdEtaNew,
         operationLockDate: r.operationLockDate,
@@ -3897,7 +3898,7 @@ function _renderEtdEtaFlagged(pageId, s, flagLabel, sumField, colSetName, colSet
 
   const flaggedMap = {};
   flaggedShipments.forEach(sh => {
-    const br = sh.location, ow = sh.jobOwner;
+    const br = sh.zone, ow = sh.jobOwner;
     const ck = etdEtaColKey(sh, view) || 'other';
     if (!flaggedMap[br]) flaggedMap[br] = {};
     if (!flaggedMap[br][ow]) flaggedMap[br][ow] = {};
@@ -3916,7 +3917,7 @@ function _renderEtdEtaFlagged(pageId, s, flagLabel, sumField, colSetName, colSet
   const tbl = document.getElementById('tbl-' + pageId);
   if (tbl) tbl.classList.toggle('single-col', isSingle);
   const thead = document.getElementById('thead-' + pageId);
-  if (thead) thead.innerHTML = '<th style="min-width:260px">Branch / Sales Person</th>' +
+  if (thead) thead.innerHTML = '<th style="min-width:260px">Zone / Job Owner</th>' +
     (isSingle ? '' : '<th class="col-grand">Grand Total</th>') +
     cols.map(c => `<th style="min-width:${isSingle?'300':'100'}px;text-align:right">${c.label}</th>`).join('');
 
@@ -3932,7 +3933,7 @@ function _renderEtdEtaFlagged(pageId, s, flagLabel, sumField, colSetName, colSet
   Object.keys(flaggedMap).sort().forEach((br, bi) => {
     const bKey = s + bi;
     const owMap = flaggedMap[br] || {};
-    const brShipments = flaggedShipments.filter(sh => sh.location === br);
+    const brShipments = flaggedShipments.filter(sh => sh.zone === br);
     const brLines = brShipments.flatMap(sh => sh.lines).filter(r => (Number(r[sumField]) || 0) > 0);
     const brId = dvReg(brLines);
     const safeBr = br.replace(/'/g, "\\'");
