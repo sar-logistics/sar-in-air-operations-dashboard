@@ -3812,6 +3812,7 @@ function groupEtdEtaByShipment(filteredDD, sumField) {
         location: r.location || '(No Branch)',
         jobOwner: r.jobOwner || '(Unknown)',
         etdEtaNew: r.etdEtaNew,
+        operationLockDate: r.operationLockDate,
         sum: 0,
         lines: [],
       };
@@ -3828,7 +3829,7 @@ function groupEtdEtaByShipment(filteredDD, sumField) {
 // card clicks) - openDrill()'s colSet parameter expects the array itself,
 // not a string name; passing the string there was the bug causing the
 // wrong/broken drill-through on KPI clicks.
-function _renderEtdEtaFlagged(pageId, s, flagLabel, sumField, colSetName, colSetArr) {
+function _renderEtdEtaFlagged(pageId, s, flagLabel, sumField, colSetName, colSetArr, requireOpsLock) {
   const { cols, label, view } = getColumns(pageId);
   const _kpiRow = document.querySelector('#page-' + pageId + ' .kpi-row');
   if (_kpiRow) _kpiRow.style.display = showScorecards(view) ? '' : 'none';
@@ -3836,7 +3837,11 @@ function _renderEtdEtaFlagged(pageId, s, flagLabel, sumField, colSetName, colSet
   let filteredDD = applyAdditionalFilters(applyDropdownFilters(filterEtdEtaByDate(rawWIP, pageId), pageId), pageId);
   populateFilters(pageId, filteredDD);
   const shipments = groupEtdEtaByShipment(filteredDD, sumField);
-  const flaggedShipments = shipments.filter(sh => sh.sum > 0);
+  // Jobs Locked with Pending Cost, per the requirements doc, is "Ops Lock =
+  // Yes AND cost still pending" - not just cost pending alone. requireOpsLock
+  // adds that condition; Billing Pendency doesn't pass it, so it's unaffected
+  const isOpsLocked = sh => sh.operationLockDate && String(sh.operationLockDate).trim() !== '';
+  const flaggedShipments = shipments.filter(sh => sh.sum > 0 && (!requireOpsLock || isOpsLocked(sh)));
 
   const totalJobs = shipments.length;
   const flaggedCount = flaggedShipments.length;
@@ -3936,7 +3941,7 @@ function renderUnbilledRev() {
 }
 
 function renderUnpostedCost() {
-  _renderEtdEtaFlagged('unposted-cost', 'uc', 'Unposted Cost', 'unpostedCost', 'DV_COLS_WIP_COST', DV_COLS_WIP_COST);
+  _renderEtdEtaFlagged('unposted-cost', 'uc', 'Pending Cost', 'unpostedCost', 'DV_COLS_WIP_COST', DV_COLS_WIP_COST, true);
 }
 
 
@@ -6138,16 +6143,17 @@ function renderSummary() {
   // filterEtdEtaByDate() + etdEtaColKey()), so these counts actually match
   // those pages instead of silently always showing 0/healthy (the old
   // w.wip/w.accrual field names don't exist on USA's data at all).
-  function computeEtdEtaReportStats(sumField) {
+  function computeEtdEtaReportStats(sumField, requireOpsLock) {
     const etdEtaFiltered = filterEtdEtaByDate(rawWIP, pageId);
     const shipments = groupEtdEtaByShipment(etdEtaFiltered, sumField);
+    const isOpsLocked = sh => sh.operationLockDate && String(sh.operationLockDate).trim() !== '';
     const totals = {}, flags = {}, flagAmounts = {};
     cols.forEach(c => { totals[c.key] = 0; flags[c.key] = 0; flagAmounts[c.key] = 0; });
     shipments.forEach(sh => {
       const ck = etdEtaColKey(sh, view);
       if (!ck || totals[ck] === undefined) return;
       totals[ck]++;
-      if (sh.sum > 0) {
+      if (sh.sum > 0 && (!requireOpsLock || isOpsLocked(sh))) {
         flags[ck]++;
         flagAmounts[ck] += sh.sum;
       }
@@ -6164,7 +6170,7 @@ function renderSummary() {
       return { report, ...computeEtdEtaReportStats('unbilledRevenue') };
     }
     if (report.id === 'cost-not-posted') {
-      return { report, ...computeEtdEtaReportStats('unpostedCost') };
+      return { report, ...computeEtdEtaReportStats('unpostedCost', true) };
     }
 
     let data = filtered;
