@@ -3405,7 +3405,7 @@ function renderTotalJobs() {
   // Build totalMap: zone → owner → col counts
   const totalMap = {};
   filtered.forEach(r => {
-    const br = r.zone || '(Unmapped)';
+    const br = r.zone || 'Cross Sales';
     const ow = r.operator  || r.jobOwner || '(Unknown)';
     const ck = getColKey(r, view) || 'other';
     if (!totalMap[br]) totalMap[br] = {};
@@ -3442,10 +3442,10 @@ function renderTotalJobs() {
   </tr>
   <tr class="gt-sep"><td colspan="${cols.length + (isSingle?1:2)}"></td></tr>`;
 
-  Object.keys(totalMap).sort().forEach((br, bi) => {
+  sortZonesLast(Object.keys(totalMap)).forEach((br, bi) => {
     const bKey  = 'tj' + bi;
     const owMap = totalMap[br] || {};
-    const brRecs = filtered.filter(r => (r.zone || '(Unmapped)') === br);
+    const brRecs = filtered.filter(r => (r.zone || 'Cross Sales') === br);
     const brId   = dvReg(brRecs);
     const safeBr = br.replace(/'/g, "\\'");
     const brTo   = {}; cols.forEach(c => { brTo[c.key] = 0; }); let brGrand = 0;
@@ -3518,7 +3518,7 @@ function renderOpsLockPendency() {
   // Build flaggedMap only
   const flaggedMap = {};
   flaggedDD.forEach(r => {
-    const br=r.zone||'(Unmapped)', ow=r.operator||r.jobOwner||'(Unknown)', ck=getColKey(r,view)||'other';
+    const br=r.zone||'Cross Sales', ow=r.operator||r.jobOwner||'(Unknown)', ck=getColKey(r,view)||'other';
     if (!flaggedMap[br]) flaggedMap[br]={};
     if (!flaggedMap[br][ow]) flaggedMap[br][ow]={};
     flaggedMap[br][ow][ck]=(flaggedMap[br][ow][ck]||0)+1;
@@ -3540,9 +3540,9 @@ function renderOpsLockPendency() {
   let h=`<tr class="gt-block"><td style="padding-left:10px"><i class="rc open" id="rc-gt-olp" onclick="toggleRows('gt-olp',event)">▼</i> <strong>GRAND TOTAL</strong></td>${gFTd}${colCells(gtFl,flaggedDD,cols,colKeyFn,'Grand Total — Ops Lock Pendency',label,'DV_COLS_OPEN_JOBS')}</tr>
   <tr class="gt-sep"><td colspan="${cols.length+(isSingle?1:2)}"></td></tr>`;
 
-  Object.keys(flaggedMap).sort().forEach((br,bi)=>{
+  sortZonesLast(Object.keys(flaggedMap)).forEach((br,bi)=>{
     const bKey='olp'+bi, owMap=flaggedMap[br]||{};
-    const brFlagRecs=flaggedDD.filter(r=>(r.zone||'(Unmapped)')===br);
+    const brFlagRecs=flaggedDD.filter(r=>(r.zone||'Cross Sales')===br);
     const brFlId=dvReg(brFlagRecs), safeBr=br.replace(/'/g,"\\'");
     const brFl={}; cols.forEach(c=>{brFl[c.key]=0;}); let bFG=0;
     Object.values(owMap).forEach(oc=>{cols.forEach(c=>{brFl[c.key]+=(oc[c.key]||0);}); bFG+=Object.values(oc).reduce((a,b)=>a+b,0);});
@@ -3846,7 +3846,7 @@ function groupEtdEtaByShipment(filteredDD, sumField) {
       byShipment[r.shipmentId] = {
         shipmentId: r.shipmentId,
         location: r.location || '(No Branch)',
-        zone: r.zone || '(Unmapped)',
+        zone: r.zone || 'Cross Sales',
         jobOwner: r.jobOwner || '(Unknown)',
         etdEtaNew: r.etdEtaNew,
         operationLockDate: r.operationLockDate,
@@ -3930,7 +3930,7 @@ function _renderEtdEtaFlagged(pageId, s, flagLabel, sumField, colSetName, colSet
   </tr>
   <tr class="gt-sep"><td colspan="${cols.length + (isSingle?1:2)}"></td></tr>`;
 
-  Object.keys(flaggedMap).sort().forEach((br, bi) => {
+  sortZonesLast(Object.keys(flaggedMap)).forEach((br, bi) => {
     const bKey = s + bi;
     const owMap = flaggedMap[br] || {};
     const brShipments = flaggedShipments.filter(sh => sh.zone === br);
@@ -5043,6 +5043,17 @@ function closeDrillBtn() {
 }
 
 // ── LOAD DATA ────────────────────────────────────────────────
+// Sorts zone names alphabetically but always pushes "Cross Sales" (the
+// bucket for jobs whose Sales Person has no Zone Mapping entry) to the end,
+// so it reads as a clear catch-all rather than sitting wherever "C" falls
+function sortZonesLast(keys) {
+  return keys.sort((a, b) => {
+    if (a === 'Cross Sales') return 1;
+    if (b === 'Cross Sales') return -1;
+    return a.localeCompare(b);
+  });
+}
+
 // Strips a trailing "| CODE" suffix some Sales Person values carry (e.g.
 // "Deen Dayal | INZ01" -> "Deen Dayal"), matching the convention already
 // established for this same field on the Air Sales dashboard, so names
@@ -5070,18 +5081,18 @@ function applyDirectionField(arr) {
 // Builds a Sales Rep -> Zone lookup from zoneMapping and stamps a `zone`
 // field onto every rawSRR and rawWIP record, matched on salesPerson against
 // the mapping's "Sales Rep Name" field (salesRepName after camelCase).
-// Unmatched records get zone = '(Unmapped)' rather than being dropped, so
+// Unmatched records get zone = 'Cross Sales' rather than being dropped, so
 // they're still visible/filterable instead of silently disappearing.
 function applyZoneLookup() {
   const lookup = {};
   (zoneMapping || []).forEach(z => {
     const key = stripSalesPersonCode(z.salesRepName || z.displayName).toUpperCase();
-    if (key) lookup[key] = z.zone || '(Unmapped)';
+    if (key) lookup[key] = z.zone || 'Cross Sales';
   });
   [rawSRR, rawWIP].forEach(arr => {
     (arr || []).forEach(r => {
       const key = stripSalesPersonCode(r.salesPerson).toUpperCase();
-      r.zone = lookup[key] || '(Unmapped)';
+      r.zone = lookup[key] || 'Cross Sales';
     });
   });
   console.log('[applyZoneLookup] mapping entries:', Object.keys(lookup).length, '| SRR zoned:', (rawSRR||[]).length, '| ETD/ETA zoned:', (rawWIP||[]).length);
