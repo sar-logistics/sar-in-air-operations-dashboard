@@ -3834,7 +3834,11 @@ function etdEtaColKey(row, view) {
 }
 
 function etdEtaMatchesDirection(r) {
-  const lob = (r.lob || '').toUpperCase();
+  // Use the derived LOB (Export/Import) field ("AIR EXPORT"/"AIR IMPORT"),
+  // not the ETD/ETA tab's own native LOB column ("FFWD AIR EXP"/"FFWD AIR
+  // IMP" - abbreviated, never contains the substring EXPORT/IMPORT, so
+  // matching against it silently filtered out every record)
+  const lob = (r.lobExportImport || r.lob || '').toUpperCase();
   return currentDirection === 'Export' ? lob.indexOf('EXPORT') !== -1 : lob.indexOf('IMPORT') !== -1;
 }
 
