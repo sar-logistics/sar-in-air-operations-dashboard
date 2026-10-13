@@ -3170,8 +3170,8 @@ function fmtDate(d) {
 function initFilters(pageId) {
   const now = new Date();
 
-  // Default range: Jan 2026 -> current month, per explicit request
-  const fromYear = 2026, fromMonth = 0;
+  // Default range: Apr 2026 (fiscal year start) -> current month, per explicit request
+  const fromYear = 2026, fromMonth = 3;
   const toYear   = 2026, toMonth   = now.getMonth();
 
   const fromId = 'mp-from-' + pageId;
