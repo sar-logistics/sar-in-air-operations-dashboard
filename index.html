@@ -2021,7 +2021,7 @@ let zoneMapping = []; // Sales Rep -> Zone reference data, for Zone segmentation
 // State 2: LOB minimized + Export/Import cards visible
 // State 3: LOB minimized + direction selected + pages visible
 
-let currentLob = 'air'; // Air Ops dashboard only has Air data - no LOB choice needed, unlike the Sea Ops dashboards this was cloned from
+let currentLob = null; // null = land on the LOB-selector screen first (with its illustration); user clicks into Air manually, same as other dashboards
 
 function matchesCurrentLob(r) {
   const lobCode = (r.lob || '').toString().trim().toUpperCase();
