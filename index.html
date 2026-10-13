@@ -4556,34 +4556,16 @@ let dvActiveLob   = 'ALL';
 
 const DV_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-let currentCurrency = 'USD'; // USD (default, raw sheet value) or INR (converted)
-let manualRate = 83; // approximate INR per USD, admin-adjustable in Admin Panel
+// Air Ops' sheet data is already native INR - no currency toggle or
+// conversion needed (unlike USA, which natively had USD and needed one).
+function getCurrencySymbol() { return '₹'; }
 
-function getExchangeRate() {
-  // USD per USD = 1 (raw sheet value, no conversion). INR per USD = manualRate
-  return currentCurrency === 'INR' ? (manualRate || 83) : 1;
-}
-
-function getCurrencySymbol() { return currentCurrency === 'INR' ? '₹' : '$'; }
-
-function updateRateLabel() {
-  const el = document.getElementById('cur-rate-label');
-  if (!el) return;
-  el.textContent = '1 USD = ₹' + (manualRate || 83);
-}
+function updateRateLabel() {} // no-op - no rate to show, kept so existing calls don't need removing
 
 function fmtIndian(n) {
-  // USA's sheet data is already in USD. USD mode shows it raw (rate 1, no
-  // conversion); INR mode multiplies by the admin-set rate to show the
-  // converted amount. This replaces the old Indonesia-specific logic that
-  // divided every value by a hardcoded IDR rate regardless of mode -
-  // silently shrinking every real dollar value by a factor of ~17500 (e.g.
-  // a real $8,252 displayed as "$0.47").
-  const rate = getExchangeRate();
-  n = n * rate;
   const abs = Math.abs(n);
   const sign = n < 0 ? '-' : '';
-  return sign + getCurrencySymbol() + abs.toLocaleString('en-US', { maximumFractionDigits: 2 });
+  return sign + '₹' + abs.toLocaleString('en-US', { maximumFractionDigits: 2 });
 }
 
 function formatDvDate(v) {
@@ -5839,21 +5821,6 @@ async function loadAdminPanel() {
           style="width:100%;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:8px;padding:7px 12px 7px 32px;font-size:13px;color:#0f172a;outline:none;background:#fff">
       </div>
       <span id="adminUserCount" style="font-size:13px;color:#64748b">${users.length} of ${users.length} users</span>
-    </div>
-
-    <div style="background:#fff;border:1px solid #e8ecf0;border-radius:12px;padding:14px 16px;margin-bottom:24px;display:flex;align-items:center;gap:14px;box-shadow:0 1px 4px rgba(0,0,0,.06)">
-      <div style="font-size:11px;font-weight:700;color:#94a3b8;letter-spacing:.08em;text-transform:uppercase">Currency</div>
-      <div style="display:flex;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden">
-        <button id="cur-usd" onclick="setCurrency('USD')" style="border:none;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;background:#1F3A6E;color:#fff">USD</button>
-        <button id="cur-inr" onclick="setCurrency('INR')" style="border:none;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;background:transparent;color:#64748b">INR</button>
-      </div>
-      <div style="display:flex;align-items:center;gap:6px">
-        <span style="font-size:12px;color:#64748b">1 USD = ₹</span>
-        <input id="admin-usd-rate-input" type="number" value="${manualRate}" min="1" step="0.01"
-          style="width:80px;font-size:13px;padding:5px 8px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;color:#0f172a;outline:none"
-          oninput="manualRate=parseFloat(this.value)||83;renderPage(document.querySelector('.page.active')?.id.replace('page-',''))" />
-      </div>
-      <div style="font-size:11px;color:#94a3b8">Rate only applies when INR is selected</div>
     </div>`;
 
   // Render role groups
@@ -6476,35 +6443,6 @@ function renderSummary() {
   container.innerHTML = heroHTML + sparkHTML + drillHTML;
 
   // ── Master-detail: show monthly breakdown on left when log row clicked ────
-  // ── EXPORT / IMPORT DIRECTION TOGGLE ─────────────────────
-  window.setCurrency = function(cur) {
-    currentCurrency = cur;
-    const inrBtn = document.getElementById('cur-inr');
-    const usdBtn = document.getElementById('cur-usd');
-    if (inrBtn) { inrBtn.style.background = cur === 'INR' ? '#1F3A6E' : 'transparent'; inrBtn.style.color = cur === 'INR' ? '#fff' : '#64748b'; }
-    if (usdBtn) { usdBtn.style.background = cur === 'USD' ? '#1F3A6E' : 'transparent'; usdBtn.style.color = cur === 'USD' ? '#fff' : '#64748b'; }
-    // Save expanded rows before re-render
-    const openKeys = new Set();
-    document.querySelectorAll('.rc.open').forEach(rc => { if (rc.id) openKeys.add(rc.id); });
-    const activeEl = document.querySelector('.page.active');
-    const divId = activeEl ? activeEl.id.replace('page-', '') : 'summary';
-    renderPage(divId);
-    // Restore expanded rows after re-render
-    requestAnimationFrame(() => {
-      openKeys.forEach(rcId => {
-        const rc = document.getElementById(rcId);
-        if (rc && !rc.classList.contains('open')) {
-          const key = rcId.replace('rc-', '');
-          const tbl = rc.closest('table');
-          if (tbl) {
-            rc.classList.add('open'); rc.textContent = '▼';
-            tbl.querySelectorAll('.r-br-' + key).forEach(r => r.classList.remove('r-hidden'));
-          }
-        }
-      });
-    });
-  };
-
 
 
   if (!window._sumSort) window._sumSort = 'high'; // init only once
