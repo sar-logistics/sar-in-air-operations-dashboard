@@ -645,7 +645,7 @@ body.dashboard-blurred .content::after{background:rgba(15,23,42,0)}
 .sec-ct{font-size:11px;color:var(--text3)}
 
 /* TABLE */
-.tbl-wrap{background:#fff;border:1px solid var(--border);border-radius:12px;overflow:auto;margin-bottom:14px;height:calc(100vh - 320px)}
+.tbl-wrap{background:#fff;border:1px solid var(--border);border-radius:12px;overflow:auto;margin-bottom:14px;min-height:300px}
 table{width:100%;border-collapse:collapse;font-size:12px;min-width:600px}
 thead th{background:#f8fafc;padding:9px 14px;text-align:right;font-weight:600;font-size:10px;color:var(--text3);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:2;white-space:nowrap;letter-spacing:.04em;text-transform:uppercase}
 thead th:first-child{text-align:left;min-width:170px;position:sticky;left:0;z-index:3;background:#f8fafc}
@@ -1331,7 +1331,7 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
         </div>
 
         <div class="sec-hd">
-          <div class="sec-title">Branch › Job Owner — Ops Lock Pendency (ETD/ETA +7 days, not yet locked)</div>
+          <div class="sec-title">Zone › Job Owner — Ops Lock Pendency (ETD/ETA +7 days, not yet locked)</div>
           <div style="display:flex;align-items:center;gap:6px">
             <div class="sec-ct" id="sc-ops-lock-pendency">Loading…</div>
             <div style="width:1px;height:14px;background:var(--border);margin:0 2px"></div>
@@ -1423,7 +1423,7 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
         </div>
 
         <div class="sec-hd">
-          <div class="sec-title">Branch › Job Owner — Total Jobs Created</div>
+          <div class="sec-title">Zone › Job Owner — Total Air Jobs</div>
           <div style="display:flex;align-items:center;gap:6px">
             <div class="sec-ct" id="sc-total-jobs">Loading…</div>
             <div style="width:1px;height:14px;background:var(--border);margin:0 2px"></div>
@@ -1531,7 +1531,7 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
           </div>
         </div>
         <div class="sec-hd">
-          <div class="sec-title">Branch › Job Owner — Revenue not billed within 3 days of SOB</div>
+          <div class="sec-title">Zone › Job Owner — Billing Pendency</div>
           <div style="display:flex;align-items:center;gap:6px">
             <div class="sec-ct" id="sc-unbilled-rev">Loading…</div>
             <div style="width:1px;height:14px;background:var(--border);margin:0 2px"></div>
@@ -1638,7 +1638,7 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
           </div>
         </div>
         <div class="sec-hd">
-          <div class="sec-title">Branch › Job Owner — Cost not posted within 7 days of SOB</div>
+          <div class="sec-title">Zone › Job Owner — Jobs Locked with Pending Cost</div>
           <div style="display:flex;align-items:center;gap:6px">
             <div class="sec-ct" id="sc-unposted-cost">Loading…</div>
             <div style="width:1px;height:14px;background:var(--border);margin:0 2px"></div>
@@ -3377,6 +3377,20 @@ function toggleRows(key, event) {
   if (rc) { rc.classList.toggle('open', !open); rc.textContent = open ? '▶' : '▼'; }
 }
 
+// Measures the actual space left below the visible .tbl-wrap and sets its
+// height to fill exactly that, rather than guessing a fixed pixel offset
+// for the header/filter area above it (which differs per page and broke
+// the first attempt at this). Runs after the DOM has updated (two rAFs -
+// one for layout, one to be safe after any late reflow) and on resize.
+function fitTableHeight() {
+  const wrap = document.querySelector('.page.active .tbl-wrap');
+  if (!wrap) return;
+  const rect = wrap.getBoundingClientRect();
+  const available = window.innerHeight - rect.top - 24; // 24px bottom breathing room
+  wrap.style.height = Math.max(300, available) + 'px';
+}
+window.addEventListener('resize', fitTableHeight);
+
 function renderPage(pageId) {
   // ── Air Ops — 7 pages ──────────────────────────
   if (pageId === 'summary')            renderSummary();
@@ -3384,6 +3398,7 @@ function renderPage(pageId) {
   if (pageId === 'ops-lock-pendency')  renderOpsLockPendency();
   if (pageId === 'revenue-not-billed' || pageId === 'unbilled-rev') renderUnbilledRev();
   if (pageId === 'cost-not-posted'    || pageId === 'unposted-cost') renderUnpostedCost();
+  requestAnimationFrame(() => requestAnimationFrame(fitTableHeight));
 }
 
 // ── RENDER: Total Jobs Created ────────────────────────────────
