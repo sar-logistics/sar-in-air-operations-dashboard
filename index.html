@@ -1010,12 +1010,10 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
             <div class="lob-sub-wrap"><div class="lob-sub-inner">
               <div class="lob-sub-item" id="dir-sub-export" onclick="event.stopPropagation();setDirection('Export')">
                 <div class="lob-sub-name" style="flex:1">Air Export</div>
-                <span class="lob-sub-count" id="dir-exp-count">—</span>
                 <i class="ti ti-chevron-right" style="font-size:13px;color:rgba(255,255,255,.4)"></i>
               </div>
               <div class="lob-sub-item" id="dir-sub-import" onclick="event.stopPropagation();setDirection('Import')">
                 <div class="lob-sub-name" style="flex:1">Air Import</div>
-                <span class="lob-sub-count" id="dir-imp-count">—</span>
                 <i class="ti ti-chevron-right" style="font-size:13px;color:rgba(255,255,255,.4)"></i>
               </div>
             </div></div>
@@ -2397,14 +2395,9 @@ function refreshForDirection(dir) {
 }
 
 function updateDirCounts() {
-  // Air Ops only has Air data - no need to distinguish LOB types here at
-  // all, unlike the Sea Ops dashboards this was cloned from
-  const expCount = rawSRR.filter(r => (r.direction||'').toLowerCase() === 'export').length;
-  const impCount = rawSRR.filter(r => (r.direction||'').toLowerCase() === 'import').length;
-  const expEl = document.getElementById('dir-exp-count');
-  const impEl = document.getElementById('dir-imp-count');
-  if (expEl) expEl.textContent = expCount.toLocaleString() + ' jobs';
-  if (impEl) impEl.textContent = impCount.toLocaleString() + ' jobs';
+  // Job-count badges removed from the Air Export/Air Import rows, per
+  // request - this function is now a no-op kept only so existing calls
+  // elsewhere in the code don't need to be tracked down and removed too
 }
 
 function updateTopbarLabel() {
