@@ -1046,6 +1046,9 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
         <div class="nav-item" data-tooltip="Jobs currently open and not yet closed" onclick="setPage('open-jobs','Open Jobs','Job Related',this)">
           <i class="ti ti-folder-open"></i><span class="nav-item-label">Open Jobs</span><span class="nav-badge hidden" id="badge-open-jobs">0</span>
         </div>
+        <div class="nav-item" data-tooltip="Jobs eligible for Ops Lock closure, ETD/ETA +7 days passed, still not locked" onclick="setPage('ops-lock-pendency','Ops Lock Pendency (ETD+7)','Job Related',this)">
+          <i class="ti ti-lock-open"></i><span class="nav-item-label">Ops Lock Pendency (ETD+7)</span><span class="nav-badge hidden" id="badge-ops-lock-pendency-2">0</span>
+        </div>
       </div><!-- /sec-pendency-body -->
 
       <div class="nav-section-divider"></div>
@@ -1058,9 +1061,6 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
       <div class="nav-section-body" id="sec-performance-body">
         <div class="nav-item" data-tooltip="Jobs with a revenue gap between Estimated and Actual" onclick="setPage('revenue-not-billed','Billing Pendency','Billing &amp; Ops Control',this)">
           <i class="ti ti-receipt"></i><span class="nav-item-label">Billing Pendency</span><span class="nav-badge hidden" id="badge-revenue-not-billed-2">0</span>
-        </div>
-        <div class="nav-item" data-tooltip="Jobs eligible for Ops Lock closure, ETD/ETA +7 days passed, still not locked" onclick="setPage('ops-lock-pendency','Ops Lock Pendency (ETD+7)','Billing &amp; Ops Control',this)">
-          <i class="ti ti-lock-open"></i><span class="nav-item-label">Ops Lock Pendency (ETD+7)</span><span class="nav-badge hidden" id="badge-ops-lock-pendency-2">0</span>
         </div>
         <div class="nav-item" data-tooltip="Ops-locked jobs where cost is still pending" onclick="setPage('cost-not-posted','Jobs Locked with Pending Cost','Billing &amp; Ops Control',this)">
           <i class="ti ti-coins"></i><span class="nav-item-label">Jobs Locked with Pending Cost</span><span class="nav-badge hidden" id="badge-cost-not-posted-2">0</span>
