@@ -1318,7 +1318,7 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
 
         <div class="kpi-row">
           <div class="kpi blue">
-            <div class="kpi-top"><i class="kpi-icon-sm ti ti-chart-bar blue"></i><span class="kpi-lbl">Eligible Jobs</span></div>
+            <div class="kpi-top"><i class="kpi-icon-sm ti ti-chart-bar blue"></i><span class="kpi-lbl">Total Jobs</span></div>
             <div class="kpi-val blue" id="kv-olp-total">—</div>
             <div class="kpi-sub" id="kv-olp-period">Eligible for closure, ETD/ETA +7 days passed</div>
           </div>
@@ -3545,7 +3545,7 @@ function renderOpsLockPendency() {
 
   // Scorecards — clickable
   const kT = document.getElementById('kv-olp-total');
-  if (kT) { kT.textContent = totalJobs.toLocaleString(); kT.style.cursor='pointer'; kT.onclick=()=>openDrill(filteredDD,'Eligible Jobs',label); }
+  if (kT) { kT.textContent = totalJobs.toLocaleString(); kT.style.cursor='pointer'; kT.onclick=()=>openDrill(filteredDD,'Total Jobs',label); }
   const kF = document.getElementById('kv-olp-flagged');
   if (kF) { kF.textContent = flaggedCount.toLocaleString(); kF.style.cursor='pointer'; kF.onclick=()=>openDrill(flaggedDD,'Ops Lock Pendency',label); }
   const kP = document.getElementById('kv-olp-pct');
