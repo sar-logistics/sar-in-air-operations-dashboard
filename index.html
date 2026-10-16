@@ -1636,6 +1636,16 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
                   <div class="ms-dropdown" id="msd-zone-unposted-cost"></div>
                 </div>
               </div>
+              <div class="add-filter-row">
+                <div class="add-filter-label">Operation Lock Condition</div>
+                <label style="display:flex;align-items:center;gap:9px;font-size:12px;color:var(--text2);cursor:pointer">
+                  <span class="tgl-switch">
+                    <input type="checkbox" id="chk-uc-require-ops-lock" checked onchange="toggleUcRequireOpsLock(this)">
+                    <span class="tgl-track"></span>
+                  </span>
+                  Require Ops Lock = Yes
+                </label>
+              </div>
             </div>
           </div>
           <button class="dv-btn" onclick="refreshData('unposted-cost')" style="display:inline-flex;align-items:center;gap:5px"><i class="ti ti-refresh" style="font-size:13px"></i> Refresh</button>
@@ -1665,10 +1675,10 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
             <button class="ec-btn" data-state="collapsed" onclick="toggleExpandCollapse('unposted-cost', this)" style="background:var(--accent-bg);border-color:var(--accent-border);color:var(--accent);font-weight:500"><i class="ti ti-chevrons-down" style="font-size:12px"></i> Expand All</button>
             <label style="display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text2);cursor:pointer">
               <span class="tgl-switch">
-                <input type="checkbox" id="chk-uc-require-ops-lock" checked onchange="toggleUcRequireOpsLock(this)">
+                <input type="checkbox" id="uc-viewmode-chk" onchange="toggleUcViewMode(this)">
                 <span class="tgl-track"></span>
               </span>
-              Require Ops Lock
+              View by <span id="uc-viewmode-lbl">Count</span>
             </label>
           </div>
         </div>
@@ -2362,6 +2372,7 @@ let currentDirection = 'Export'; // 'Export' or 'Import'
 let directionConfirmed = false; // true only once the user has actually picked Export/Import via setDirection() - keeps the sidebar direction label hidden on the landing/LOB-selection screen instead of showing the unselected default
 let ubViewMode = 'count'; // 'count' or 'amount' - toggles Billing Pendency's grid between job counts and summed unbilled amounts
 let ucRequireOpsLock = true; // Jobs Locked with Pending Cost's "Require Ops Lock" filter - defaults true to match the page's original hardcoded behavior (Ops Lock = Yes AND cost still pending); unchecking shows all jobs with pending cost regardless of lock status
+let ucViewMode = 'count'; // 'count' or 'amount' - toggles Jobs Locked with Pending Cost's grid between job counts and summed unposted cost amounts, matching Billing Pendency's ubViewMode
 let urRequireOpsLock = false; // Billing Pendency's own "Require Ops Lock" filter - defaults false (unchecked) to match the page's current behavior, which never required Ops Lock
  
 let allJPA = [];
@@ -4008,7 +4019,7 @@ function _renderEtdEtaFlagged(pageId, s, flagLabel, sumField, colSetName, colSet
   // Billing Pendency's grid toggle: count shipments or sum their amounts,
   // per request. Only s === 'ur' respects ubViewMode - unposted-cost
   // (s === 'uc') always counts, this toggle doesn't touch that page
-  const isAmountMode = s === 'ur' && ubViewMode === 'amount';
+  const isAmountMode = (s === 'ur' && ubViewMode === 'amount') || (s === 'uc' && ucViewMode === 'amount');
   const gridVal = sh => isAmountMode ? sh.sum : 1;
   if (s === 'ur') {
     const vmChk = document.getElementById('ub-viewmode-chk');
@@ -4021,6 +4032,10 @@ function _renderEtdEtaFlagged(pageId, s, flagLabel, sumField, colSetName, colSet
   if (s === 'uc') {
     const opsLockChk = document.getElementById('chk-uc-require-ops-lock');
     if (opsLockChk) opsLockChk.checked = ucRequireOpsLock;
+    const ucVmChk = document.getElementById('uc-viewmode-chk');
+    if (ucVmChk) ucVmChk.checked = ucViewMode === 'amount';
+    const ucVmLbl = document.getElementById('uc-viewmode-lbl');
+    if (ucVmLbl) ucVmLbl.textContent = ucViewMode === 'amount' ? 'Amount' : 'Count';
   }
 
   const flaggedMap = {};
@@ -4464,6 +4479,11 @@ function toggleExpandCollapse(pageId, btnEl) {
 
 function toggleUcRequireOpsLock(chkEl) {
   ucRequireOpsLock = chkEl.checked;
+  renderPage('unposted-cost');
+}
+
+function toggleUcViewMode(chkEl) {
+  ucViewMode = chkEl.checked ? 'amount' : 'count';
   renderPage('unposted-cost');
 }
 
