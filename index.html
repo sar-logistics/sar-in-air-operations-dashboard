@@ -3068,6 +3068,18 @@ function fyLabel(fyStart) {
   return 'FY ' + fyStart + '-' + String(fyStart + 1).slice(2);
 }
 
+function getEtdEtaDatesForRange(pageId) {
+  // unbilled-rev/unposted-cost actually render rawWIP (the ETD/ETA tab),
+  // not allSRR (Air Export/Import) - auto-detecting their column range from
+  // allSRR's dates was computing it against the wrong dataset entirely,
+  // which left trailing columns empty whenever the two tabs' date spans
+  // didn't line up. Every other page still uses allSRR, unaffected.
+  if (pageId === 'unbilled-rev' || pageId === 'unposted-cost') {
+    return (rawWIP || []).map(r => r.etdEtaNew ? new Date(r.etdEtaNew) : null).filter(d => d && d.getFullYear() > 2000);
+  }
+  return allSRR.map(r => { if (r.jobDate !== undefined) return r.etdEtaNew ? new Date(r.etdEtaNew) : (r.jobDate ? new Date(r.jobDate) : null); const raw = r.direction === 'Import' ? (r.destinationEta || r.originEtd) : (r.originEtd || r.etdDate); return raw ? new Date(raw) : null; }).filter(d => d && d.getFullYear() > 2000);
+}
+
 function getDateRange(pageId) {
   const viewEl = document.getElementById('view-' + pageId);
   const view   = viewEl ? viewEl.value : 'monthly';
@@ -3083,7 +3095,7 @@ function getDateRange(pageId) {
       label = MONTHS[fromState.selected.month] + ' ' + fromState.selected.year + ' → ' + MONTHS[toState.selected.month] + ' ' + toState.selected.year;
     } else {
       // Auto-detect from actual data (ignore invalid pre-2000 dates)
-      const dates = allSRR.map(r => { if (r.jobDate !== undefined) return r.etdEtaNew ? new Date(r.etdEtaNew) : (r.jobDate ? new Date(r.jobDate) : null); const raw = r.direction === 'Import' ? (r.destinationEta || r.originEtd) : (r.originEtd || r.etdDate); return raw ? new Date(raw) : null; }).filter(d => d && d.getFullYear() > 2000);
+      const dates = getEtdEtaDatesForRange(pageId);
       if (dates.length) {
         const minD = new Date(Math.min(...dates.map(d => d.getTime())));
         const maxD = new Date(Math.max(...dates.map(d => d.getTime())));
@@ -3118,7 +3130,7 @@ function getDateRange(pageId) {
   } else if (view === 'quarterly') {
     const qVal = Number(document.getElementById('quarter-' + pageId).value || 1);
     // Span all data (by fiscal year) so all FY columns are shown
-    const dates = allSRR.map(r => { if (r.jobDate !== undefined) return r.etdEtaNew ? new Date(r.etdEtaNew) : (r.jobDate ? new Date(r.jobDate) : null); const raw = r.direction === 'Import' ? (r.destinationEta || r.originEtd) : (r.originEtd || r.etdDate); return raw ? new Date(raw) : null; }).filter(d => d && d.getFullYear() > 2000);
+    const dates = getEtdEtaDatesForRange(pageId);
     if (dates.length) {
       const minD = new Date(Math.min(...dates.map(d => d.getTime())));
       const maxD = new Date(Math.max(...dates.map(d => d.getTime())));
@@ -3133,7 +3145,7 @@ function getDateRange(pageId) {
     label = qNames[qVal-1];
   } else if (view === 'yearly') {
     // Auto-detect FY range from actual data (fiscal year: April-March)
-    const dates = allSRR.map(r => { if (r.jobDate !== undefined) return r.etdEtaNew ? new Date(r.etdEtaNew) : (r.jobDate ? new Date(r.jobDate) : null); const raw = r.direction === 'Import' ? (r.destinationEta || r.originEtd) : (r.originEtd || r.etdDate); return raw ? new Date(raw) : null; }).filter(d => d && d.getFullYear() > 2000);
+    const dates = getEtdEtaDatesForRange(pageId);
     if (dates.length) {
       const minD = new Date(Math.min(...dates.map(d => d.getTime())));
       const maxD = new Date(Math.max(...dates.map(d => d.getTime())));
