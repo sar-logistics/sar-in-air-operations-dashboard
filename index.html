@@ -3908,7 +3908,7 @@ function groupEtdEtaByShipment(filteredDD, sumField) {
 // card clicks) - openDrill()'s colSet parameter expects the array itself,
 // not a string name; passing the string there was the bug causing the
 // wrong/broken drill-through on KPI clicks.
-function _renderEtdEtaFlagged(pageId, s, flagLabel, sumField, colSetName, colSetArr, requireOpsLock) {
+function _renderEtdEtaFlagged(pageId, s, flagLabel, sumField, colSetName, colSetArr, requireOpsLock, cutoffDays) {
   const { cols, label, view } = getColumns(pageId);
   const _kpiRow = document.querySelector('#page-' + pageId + ' .kpi-row');
   if (_kpiRow) _kpiRow.style.display = showScorecards(view) ? '' : 'none';
@@ -3920,7 +3920,19 @@ function _renderEtdEtaFlagged(pageId, s, flagLabel, sumField, colSetName, colSet
   // Yes AND cost still pending" - not just cost pending alone. requireOpsLock
   // adds that condition; Billing Pendency doesn't pass it, so it's unaffected
   const isOpsLocked = sh => sh.operationLockDate && String(sh.operationLockDate).trim() !== '';
-  const flaggedShipments = shipments.filter(sh => sh.sum > 0 && (!requireOpsLock || isOpsLocked(sh)));
+  // Billing Pendency: ETD/ETA + cutoffDays (Today - cutoffDays) - sh.etdEtaNew
+  // is already direction-aware at the data level (derived on the sheet as
+  // ETD for Export rows, ETA for Import rows), so the same check here
+  // automatically applies ETD+3 for Export and ETA+3 for Import with no
+  // branching needed. Pages that don't pass cutoffDays are unaffected.
+  const isPastCutoff = sh => {
+    if (!cutoffDays) return true;
+    const d = sh.etdEtaNew ? new Date(sh.etdEtaNew) : null;
+    if (!d || isNaN(d)) return false;
+    const cutoff = new Date(); cutoff.setHours(0,0,0,0); cutoff.setDate(cutoff.getDate() - cutoffDays);
+    return d < cutoff;
+  };
+  const flaggedShipments = shipments.filter(sh => sh.sum > 0 && (!requireOpsLock || isOpsLocked(sh)) && isPastCutoff(sh));
 
   const totalJobs = shipments.length;
   const flaggedCount = flaggedShipments.length;
@@ -4016,7 +4028,7 @@ function _renderEtdEtaFlagged(pageId, s, flagLabel, sumField, colSetName, colSet
 }
 
 function renderUnbilledRev() {
-  _renderEtdEtaFlagged('unbilled-rev', 'ur', 'Unbilled Revenue', 'unbilledRevenue', 'DV_COLS_WIP_REVENUE', DV_COLS_WIP_REVENUE);
+  _renderEtdEtaFlagged('unbilled-rev', 'ur', 'Unbilled Revenue', 'unbilledRevenue', 'DV_COLS_WIP_REVENUE', DV_COLS_WIP_REVENUE, false, 3);
 }
 
 function renderUnpostedCost() {
@@ -6281,17 +6293,27 @@ function renderSummary() {
   // filterEtdEtaByDate() + etdEtaColKey()), so these counts actually match
   // those pages instead of silently always showing 0/healthy (the old
   // w.wip/w.accrual field names don't exist on USA's data at all).
-  function computeEtdEtaReportStats(sumField, requireOpsLock) {
+  function computeEtdEtaReportStats(sumField, requireOpsLock, cutoffDays) {
     const etdEtaFiltered = filterEtdEtaByDate(rawWIP, pageId);
     const shipments = groupEtdEtaByShipment(etdEtaFiltered, sumField);
     const isOpsLocked = sh => sh.operationLockDate && String(sh.operationLockDate).trim() !== '';
+    // Matches _renderEtdEtaFlagged()'s own grace-period check exactly -
+    // sh.etdEtaNew is already direction-aware (ETD for Export, ETA for
+    // Import), so this needs no direction branching either
+    const isPastCutoff = sh => {
+      if (!cutoffDays) return true;
+      const d = sh.etdEtaNew ? new Date(sh.etdEtaNew) : null;
+      if (!d || isNaN(d)) return false;
+      const cutoff = new Date(); cutoff.setHours(0,0,0,0); cutoff.setDate(cutoff.getDate() - cutoffDays);
+      return d < cutoff;
+    };
     const totals = {}, flags = {}, flagAmounts = {};
     cols.forEach(c => { totals[c.key] = 0; flags[c.key] = 0; flagAmounts[c.key] = 0; });
     shipments.forEach(sh => {
       const ck = etdEtaColKey(sh, view);
       if (!ck || totals[ck] === undefined) return;
       totals[ck]++;
-      if (sh.sum > 0 && (!requireOpsLock || isOpsLocked(sh))) {
+      if (sh.sum > 0 && (!requireOpsLock || isOpsLocked(sh)) && isPastCutoff(sh)) {
         flags[ck]++;
         flagAmounts[ck] += sh.sum;
       }
@@ -6305,7 +6327,7 @@ function renderSummary() {
   // ── Compute per-report stats ──────────────────────────────────────────────
   const reportStats = SUMMARY_REPORTS.map(report => {
     if (report.id === 'revenue-not-billed') {
-      return { report, ...computeEtdEtaReportStats('unbilledRevenue') };
+      return { report, ...computeEtdEtaReportStats('unbilledRevenue', false, 3) };
     }
     if (report.id === 'cost-not-posted') {
       return { report, ...computeEtdEtaReportStats('unpostedCost', true) };
