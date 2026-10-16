@@ -2273,6 +2273,13 @@ function railExpand() {
   const rail = document.getElementById('lob-icon-rail');
   if (rail) rail.classList.remove('visible');
 
+  // Clear the sidebar direction label on the way back to landing/LOB
+  // selection - it should only show while actually viewing a selected
+  // direction's reports, not before/between selections
+  directionConfirmed = false;
+  const sidebarDirLabel = document.getElementById('sidebar-direction-label');
+  if (sidebarDirLabel) sidebarDirLabel.textContent = '';
+
   // Restore visibility on the LOB icon badges - the flipLobIconToRail FLIP
   // animation hides the original while its clone travels, so it needs
   // resetting here or it'd stay invisible on return to this screen
