@@ -1532,6 +1532,7 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
           <div style="display:flex;align-items:center;gap:6px">
             <div class="sec-ct" id="sc-unbilled-rev">Loading…</div>
             <div style="width:1px;height:14px;background:var(--border);margin:0 2px"></div>
+            <button class="ec-btn" id="ub-viewmode-btn" onclick="toggleUbViewMode(this)"><i class="ti ti-switch-horizontal" style="font-size:12px"></i> Show Amount</button>
             <button class="ec-btn" data-state="collapsed" onclick="toggleExpandCollapse('unbilled-rev', this)"><i class="ti ti-chevrons-down" style="font-size:12px"></i> Expand All</button>
           </div>
         </div>
@@ -2329,6 +2330,7 @@ function updateTopbarLabel() {
 
 let currentDirection = 'Export'; // 'Export' or 'Import'
 let directionConfirmed = false; // true only once the user has actually picked Export/Import via setDirection() - keeps the sidebar direction label hidden on the landing/LOB-selection screen instead of showing the unselected default
+let ubViewMode = 'count'; // 'count' or 'amount' - toggles Billing Pendency's grid between job counts and summed unbilled amounts
  
 let allJPA = [];
 let rawJPA = [];
@@ -3364,7 +3366,7 @@ function fmtNum(n, records, title, sub) {
 
 // Build per-column clickable cells with their own record arrays
 // counts: { colKey: count }, recs: records for this scope, cols: column defs, colKeyFn: r→colKey
-function colCells(counts, recs, cols, colKeyFn, titlePfx, label, colSet) {
+function colCells(counts, recs, cols, colKeyFn, titlePfx, label, colSet, isAmount) {
   // Bucket records by time-column key
   const bucket = {};
   cols.forEach(c => { bucket[c.key] = []; });
@@ -3377,13 +3379,14 @@ function colCells(counts, recs, cols, colKeyFn, titlePfx, label, colSet) {
     const rs = bucket[c.key] || [];
     const t = (titlePfx + ' — ' + c.label).replace(/'/g, "\\'");
     const s = label.replace(/'/g, "\\'");
+    const disp = isAmount ? fmtIndian(n) : n.toLocaleString();
     if (n === 0) return '<td style="text-align:right"><span class="dash">—</span></td>';
     if (rs.length) {
       const id = dvReg(rs);
       const cs = colSet ? `,'${colSet}'` : '';
-      return `<td style="text-align:right"><span style="cursor:pointer;font-weight:500;color:var(--accent)" onclick="dvOpen('${id}','${t}','${s}'${cs})">${n.toLocaleString()}</span></td>`;
+      return `<td style="text-align:right"><span style="cursor:pointer;font-weight:500;color:var(--accent)" onclick="dvOpen('${id}','${t}','${s}'${cs})">${disp}</span></td>`;
     }
-    return `<td style="text-align:right">${n.toLocaleString()}</td>`;
+    return `<td style="text-align:right">${disp}</td>`;
   }).join('');
 }
 
@@ -3958,21 +3961,31 @@ function _renderEtdEtaFlagged(pageId, s, flagLabel, sumField, colSetName, colSet
   const kSub = document.getElementById('kv-' + s + '-pct-sub'); if (kSub) kSub.textContent = flaggedCount + ' of ' + totalJobs + ' jobs';
   const sc = document.getElementById('sc-' + pageId); if (sc) sc.textContent = totalJobs.toLocaleString() + ' total · ' + flaggedCount.toLocaleString() + ' flagged';
 
+  // Billing Pendency's grid toggle: count shipments or sum their amounts,
+  // per request. Only s === 'ur' respects ubViewMode - unposted-cost
+  // (s === 'uc') always counts, this toggle doesn't touch that page
+  const isAmountMode = s === 'ur' && ubViewMode === 'amount';
+  const gridVal = sh => isAmountMode ? sh.sum : 1;
+  if (s === 'ur') {
+    const vmBtn = document.getElementById('ub-viewmode-btn');
+    if (vmBtn) vmBtn.innerHTML = '<i class="ti ti-switch-horizontal" style="font-size:12px"></i> ' + (ubViewMode === 'count' ? 'Show Amount' : 'Show Count');
+  }
+
   const flaggedMap = {};
   flaggedShipments.forEach(sh => {
     const br = sh.zone, ow = sh.jobOwner;
     const ck = etdEtaColKey(sh, view) || 'other';
     if (!flaggedMap[br]) flaggedMap[br] = {};
     if (!flaggedMap[br][ow]) flaggedMap[br][ow] = {};
-    flaggedMap[br][ow][ck] = (flaggedMap[br][ow][ck] || 0) + 1;
+    flaggedMap[br][ow][ck] = (flaggedMap[br][ow][ck] || 0) + gridVal(sh);
   });
 
   const gtFl = {}; cols.forEach(c => { gtFl[c.key] = 0; }); let gtFlGrand = 0;
   const colKeyFn = sh => etdEtaColKey(sh, view) || 'other';
   flaggedShipments.forEach(sh => {
     const ck = colKeyFn(sh);
-    if (gtFl[ck] !== undefined) gtFl[ck]++;
-    gtFlGrand++;
+    if (gtFl[ck] !== undefined) gtFl[ck] += gridVal(sh);
+    gtFlGrand += gridVal(sh);
   });
 
   const isSingle = (cols.length === 1 && cols[0].single) || !showGrandTotal(view);
@@ -3987,8 +4000,8 @@ function _renderEtdEtaFlagged(pageId, s, flagLabel, sumField, colSetName, colSet
   const gtId = dvReg(gtLines);
   let h = `<tr class="gt-block">
     <td style="padding-left:10px"><i class="rc open" id="rc-gt-${s}" onclick="toggleRows('gt-${s}',event)">▼</i> <strong>GRAND TOTAL</strong></td>
-    ${isSingle ? '' : `<td class="col-grand" style="cursor:pointer" onclick="dvOpen('${gtId}','Grand Total — ${flagLabel}','${label}','${colSetName}')">${gtFlGrand > 0 ? gtFlGrand.toLocaleString() : '<span class="dash">—</span>'}</td>`}
-    ${colCells(gtFl, flaggedShipments.flatMap(sh => sh.lines).filter(r => (Number(r[sumField]) || 0) > 0), cols, colKeyFn, 'Grand Total — '+flagLabel, label, colSetName)}
+    ${isSingle ? '' : `<td class="col-grand" style="cursor:pointer" onclick="dvOpen('${gtId}','Grand Total — ${flagLabel}','${label}','${colSetName}')">${gtFlGrand > 0 ? (isAmountMode ? fmtIndian(gtFlGrand) : gtFlGrand.toLocaleString()) : '<span class="dash">—</span>'}</td>`}
+    ${colCells(gtFl, flaggedShipments.flatMap(sh => sh.lines).filter(r => (Number(r[sumField]) || 0) > 0), cols, colKeyFn, 'Grand Total — '+flagLabel, label, colSetName, isAmountMode)}
   </tr>
   <tr class="gt-sep"><td colspan="${cols.length + (isSingle?1:2)}"></td></tr>`;
 
@@ -4010,8 +4023,8 @@ function _renderEtdEtaFlagged(pageId, s, flagLabel, sumField, colSetName, colSet
     const av = `<span class="av" style="background:${avColor(br)}">${avInitials(br)}</span>`;
     h += `<tr class="br-row">
       <td>${av}<i class="rc" id="rc-${bKey}" onclick="toggleRows('${bKey}',event)">▶</i> ${br}</td>
-      ${isSingle ? '' : `<td class="col-grand" style="cursor:pointer" onclick="dvOpen('${brId}','${safeBr} — ${flagLabel}','${label}','${colSetName}')">${brGrand > 0 ? brGrand.toLocaleString() : '<span class="dash">—</span>'}</td>`}
-      ${colCells(brFl, brShipments.flatMap(sh => sh.lines).filter(r => (Number(r[sumField]) || 0) > 0), cols, colKeyFn, safeBr+' — '+flagLabel, label, colSetName)}
+      ${isSingle ? '' : `<td class="col-grand" style="cursor:pointer" onclick="dvOpen('${brId}','${safeBr} — ${flagLabel}','${label}','${colSetName}')">${brGrand > 0 ? (isAmountMode ? fmtIndian(brGrand) : brGrand.toLocaleString()) : '<span class="dash">—</span>'}</td>`}
+      ${colCells(brFl, brShipments.flatMap(sh => sh.lines).filter(r => (Number(r[sumField]) || 0) > 0), cols, colKeyFn, safeBr+' — '+flagLabel, label, colSetName, isAmountMode)}
     </tr>`;
 
     Object.keys(owMap).sort().forEach((ow, oi) => {
@@ -4025,8 +4038,8 @@ function _renderEtdEtaFlagged(pageId, s, flagLabel, sumField, colSetName, colSet
       const oav = `<span class="av" style="background:${avColor(ow)}">${avInitials(ow)}</span>`;
       h += `<tr class="jo-row r-br-${bKey} r-hidden" data-grp="${bKey}">
         <td>${oav}${ow} <span style="font-size:10px;color:var(--text3);margin-left:4px">(Job Owner)</span></td>
-        ${isSingle ? '' : `<td class="col-grand" style="cursor:pointer" onclick="dvOpen('${owId}','${safeOw} — ${flagLabel}','${label}','${colSetName}')">${owGrand > 0 ? owGrand.toLocaleString() : '<span class="dash">—</span>'}</td>`}
-        ${colCells(owCols, owShipments.flatMap(sh => sh.lines).filter(r => (Number(r[sumField]) || 0) > 0), cols, colKeyFn, safeOw+' — '+flagLabel, label, colSetName)}
+        ${isSingle ? '' : `<td class="col-grand" style="cursor:pointer" onclick="dvOpen('${owId}','${safeOw} — ${flagLabel}','${label}','${colSetName}')">${owGrand > 0 ? (isAmountMode ? fmtIndian(owGrand) : owGrand.toLocaleString()) : '<span class="dash">—</span>'}</td>`}
+        ${colCells(owCols, owShipments.flatMap(sh => sh.lines).filter(r => (Number(r[sumField]) || 0) > 0), cols, colKeyFn, safeOw+' — '+flagLabel, label, colSetName, isAmountMode)}
       </tr>`;
     });
   });
@@ -4395,6 +4408,14 @@ function toggleExpandCollapse(pageId, btnEl) {
     btnEl.dataset.state = 'expanded';
     btnEl.innerHTML = '<i class="ti ti-chevrons-up" style="font-size:12px"></i> Collapse All';
   }
+}
+
+function toggleUbViewMode(btnEl) {
+  ubViewMode = ubViewMode === 'count' ? 'amount' : 'count';
+  btnEl.innerHTML = ubViewMode === 'count'
+    ? '<i class="ti ti-switch-horizontal" style="font-size:12px"></i> Show Amount'
+    : '<i class="ti ti-switch-horizontal" style="font-size:12px"></i> Show Count';
+  renderPage('unbilled-rev');
 }
 
 function expandAll(pageId) {
