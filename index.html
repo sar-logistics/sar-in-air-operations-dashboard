@@ -931,6 +931,13 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
 
 /* Expand/Collapse buttons */
 .ec-btn{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--text2);background:#fff;cursor:pointer;transition:background .12s}
+.tgl-switch{position:relative;display:inline-block;width:38px;height:21px;flex-shrink:0}
+.tgl-switch input{opacity:0;width:0;height:0}
+.tgl-track{position:absolute;inset:0;background:#d1dae3;border-radius:999px;cursor:pointer;transition:background .18s ease}
+.tgl-track::before{content:"";position:absolute;height:17px;width:17px;left:2px;top:2px;background:#fff;border-radius:50%;box-shadow:0 1px 3px rgba(15,31,46,.25);transition:transform .18s ease}
+.tgl-switch input:checked + .tgl-track{background:var(--accent)}
+.tgl-switch input:checked + .tgl-track::before{transform:translateX(17px)}
+.tgl-switch input:focus-visible + .tgl-track{outline:2px solid var(--accent-border);outline-offset:2px}
 .ec-btn:hover{background:var(--bg);color:var(--text1)}
 </style>
 </head>
@@ -1615,8 +1622,11 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
               </div>
               <div class="add-filter-row">
                 <div class="add-filter-label">Operation Lock Condition</div>
-                <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);cursor:pointer">
-                  <input type="checkbox" id="chk-uc-require-ops-lock" checked onchange="toggleUcRequireOpsLock(this)">
+                <label style="display:flex;align-items:center;gap:9px;font-size:12px;color:var(--text2);cursor:pointer">
+                  <span class="tgl-switch">
+                    <input type="checkbox" id="chk-uc-require-ops-lock" checked onchange="toggleUcRequireOpsLock(this)">
+                    <span class="tgl-track"></span>
+                  </span>
                   Require Ops Lock = Yes
                 </label>
               </div>
