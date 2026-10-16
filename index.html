@@ -1517,12 +1517,12 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
         </div>
         <div class="kpi-row">
           <div class="kpi blue">
-            <div class="kpi-top"><i class="kpi-icon-sm ti ti-chart-bar blue"></i><span class="kpi-lbl">Total Jobs</span></div>
+            <div class="kpi-top"><i class="kpi-icon-sm ti ti-currency-rupee blue"></i><span class="kpi-lbl">Total Unbilled Amount</span></div>
             <div class="kpi-val blue" id="kv-ur-total">—</div>
-            <div class="kpi-sub" id="kv-ur-period">All jobs in period</div>
+            <div class="kpi-sub" id="kv-ur-period">Across flagged shipments</div>
           </div>
           <div class="kpi orange">
-            <div class="kpi-top"><span class="kpi-dot orange"></span><span class="kpi-lbl">Unbilled Revenue Jobs</span></div>
+            <div class="kpi-top"><span class="kpi-dot orange"></span><span class="kpi-lbl">Count of Unbilled Revenue</span></div>
             <div class="kpi-val orange" id="kv-ur-flagged">—</div>
             <div class="kpi-sub">Unbilled Revenue ≠ 0</div>
           </div>
@@ -3941,7 +3941,20 @@ function _renderEtdEtaFlagged(pageId, s, flagLabel, sumField, colSetName, colSet
   const flaggedLines = flaggedShipments.flatMap(sh => sh.lines).filter(r => (Number(r[sumField]) || 0) > 0);
 
   const kTotal = document.getElementById('kv-' + s + '-total');
-  if (kTotal) { kTotal.textContent = totalJobs.toLocaleString(); kTotal.style.cursor='pointer'; kTotal.onclick=()=>openDrill(filteredDD,'Total Jobs',label,colSetArr); }
+  if (kTotal) {
+    if (s === 'ur') {
+      // Billing Pendency's first KPI slot shows Total Unbilled Amount
+      // instead of a job count, per request - sh.sum is already the
+      // per-shipment unbilledRevenue total, so summing flaggedShipments
+      // gives the total unbilled amount across all flagged shipments
+      const totalUnbilledAmount = flaggedShipments.reduce((a, sh) => a + sh.sum, 0);
+      kTotal.textContent = fmtIndian(totalUnbilledAmount);
+      kTotal.style.cursor = 'pointer';
+      kTotal.onclick = () => openDrill(flaggedLines, flagLabel, label, colSetArr);
+    } else {
+      kTotal.textContent = totalJobs.toLocaleString(); kTotal.style.cursor='pointer'; kTotal.onclick=()=>openDrill(filteredDD,'Total Jobs',label,colSetArr);
+    }
+  }
   const kFlagged = document.getElementById('kv-' + s + '-flagged');
   if (kFlagged) { kFlagged.textContent = flaggedCount.toLocaleString(); kFlagged.style.cursor='pointer'; kFlagged.onclick=()=>openDrill(flaggedLines,flagLabel,label,colSetArr); }
   const kPct = document.getElementById('kv-' + s + '-pct');
