@@ -993,7 +993,7 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
       </div>
       <div style="width:100%;height:28px;overflow:hidden;position:relative;margin-top:2px;display:flex;align-items:center">
         <div style="flex:1;height:100%;position:relative;overflow:hidden" id="sidebar-plane-strip"></div>
-        <span id="sidebar-direction-label" style="font-size:10px;font-weight:700;letter-spacing:.12em;color:rgba(181,212,244,.85);text-transform:uppercase;flex-shrink:0;margin-left:6px;white-space:nowrap">Air Export</span>
+        <span id="sidebar-direction-label" style="font-size:10px;font-weight:700;letter-spacing:.12em;color:rgba(181,212,244,.85);text-transform:uppercase;flex-shrink:0;margin-left:6px;white-space:nowrap"></span>
       </div>
     </div>
       <div class="sidebar-body-row">
@@ -2173,6 +2173,7 @@ function toggleLobRow(lob) {
 
 function setDirection(dir) {
   currentDirection = dir;
+  directionConfirmed = true;
 
   // Update sub-item active states for whichever LOB is currently open
   const idPrefix = currentLob === 'air' ? 'dir-sub-air-' : currentLob === 'road' ? 'dir-sub-road-' : 'dir-sub-';
@@ -2319,12 +2320,13 @@ function updateTopbarLabel() {
     label.textContent = lobNames[currentLob] + ' · ' + currentDirection;
   }
   const sidebarDirLabel = document.getElementById('sidebar-direction-label');
-  if (sidebarDirLabel && currentDirection) {
-    sidebarDirLabel.textContent = 'Air ' + currentDirection;
+  if (sidebarDirLabel) {
+    sidebarDirLabel.textContent = directionConfirmed ? ('Air ' + currentDirection) : '';
   }
 }
 
 let currentDirection = 'Export'; // 'Export' or 'Import'
+let directionConfirmed = false; // true only once the user has actually picked Export/Import via setDirection() - keeps the sidebar direction label hidden on the landing/LOB-selection screen instead of showing the unselected default
  
 let allJPA = [];
 let rawJPA = [];
