@@ -1515,7 +1515,7 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
           </div>
           <button class="dv-btn" onclick="refreshData('unbilled-rev')" style="display:inline-flex;align-items:center;gap:5px"><i class="ti ti-refresh" style="font-size:13px"></i> Refresh</button>
         </div>
-        <div class="kpi-row">
+        <div class="kpi-row" style="grid-template-columns:repeat(2,minmax(0,1fr))">
           <div class="kpi blue">
             <div class="kpi-top"><i class="kpi-icon-sm ti ti-currency-rupee blue"></i><span class="kpi-lbl">Total Unbilled Amount</span></div>
             <div class="kpi-val blue" id="kv-ur-total">—</div>
@@ -1525,11 +1525,6 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
             <div class="kpi-top"><span class="kpi-dot orange"></span><span class="kpi-lbl">Count of Unbilled Revenue</span></div>
             <div class="kpi-val orange" id="kv-ur-flagged">—</div>
             <div class="kpi-sub">Unbilled Revenue ≠ 0</div>
-          </div>
-          <div class="kpi red">
-            <div class="kpi-top"><i class="kpi-icon-sm ti ti-percentage red"></i><span class="kpi-lbl">% of such jobs</span></div>
-            <div class="kpi-val red" id="kv-ur-pct">—</div>
-            <div class="kpi-sub" id="kv-ur-pct-sub">% of total jobs</div>
           </div>
         </div>
         <div class="sec-hd">
