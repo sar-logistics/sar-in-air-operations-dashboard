@@ -1650,21 +1650,16 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
           </div>
           <button class="dv-btn" onclick="refreshData('unposted-cost')" style="display:inline-flex;align-items:center;gap:5px"><i class="ti ti-refresh" style="font-size:13px"></i> Refresh</button>
         </div>
-        <div class="kpi-row">
+        <div class="kpi-row" style="grid-template-columns:repeat(2,minmax(0,1fr))">
           <div class="kpi blue">
-            <div class="kpi-top"><i class="kpi-icon-sm ti ti-chart-bar blue"></i><span class="kpi-lbl">Total Jobs</span></div>
+            <div class="kpi-top"><i class="kpi-icon-sm ti ti-currency-rupee blue"></i><span class="kpi-lbl">Total Unposted Amount</span></div>
             <div class="kpi-val blue" id="kv-uc-total">—</div>
-            <div class="kpi-sub" id="kv-uc-period">All jobs in period</div>
+            <div class="kpi-sub" id="kv-uc-period">Across flagged shipments</div>
           </div>
           <div class="kpi orange">
-            <div class="kpi-top"><span class="kpi-dot orange"></span><span class="kpi-lbl">Unposted Cost Jobs</span></div>
+            <div class="kpi-top"><span class="kpi-dot orange"></span><span class="kpi-lbl">Count of Unposted Cost</span></div>
             <div class="kpi-val orange" id="kv-uc-flagged">—</div>
             <div class="kpi-sub">Unposted Cost ≠ 0</div>
-          </div>
-          <div class="kpi red">
-            <div class="kpi-top"><i class="kpi-icon-sm ti ti-percentage red"></i><span class="kpi-lbl">% of such jobs</span></div>
-            <div class="kpi-val red" id="kv-uc-pct">—</div>
-            <div class="kpi-sub" id="kv-uc-pct-sub">% of total jobs</div>
           </div>
         </div>
         <div class="sec-hd">
@@ -3995,13 +3990,14 @@ function _renderEtdEtaFlagged(pageId, s, flagLabel, sumField, colSetName, colSet
 
   const kTotal = document.getElementById('kv-' + s + '-total');
   if (kTotal) {
-    if (s === 'ur') {
-      // Billing Pendency's first KPI slot shows Total Unbilled Amount
-      // instead of a job count, per request - sh.sum is already the
-      // per-shipment unbilledRevenue total, so summing flaggedShipments
-      // gives the total unbilled amount across all flagged shipments
-      const totalUnbilledAmount = flaggedShipments.reduce((a, sh) => a + sh.sum, 0);
-      kTotal.textContent = fmtIndian(totalUnbilledAmount);
+    if (s === 'ur' || s === 'uc') {
+      // Billing Pendency / Jobs Locked with Pending Cost's first KPI slot
+      // shows Total Unbilled/Unposted Amount instead of a job count, per
+      // request - sh.sum is already the per-shipment unbilledRevenue/
+      // unpostedCost total, so summing flaggedShipments gives the total
+      // amount across all flagged shipments
+      const totalAmount = flaggedShipments.reduce((a, sh) => a + sh.sum, 0);
+      kTotal.textContent = fmtIndian(totalAmount);
       kTotal.style.cursor = 'pointer';
       kTotal.onclick = () => openDrill(flaggedLines, flagLabel, label, colSetArr);
     } else {
