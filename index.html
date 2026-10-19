@@ -5355,9 +5355,15 @@ async function loadData() {
     renderSummary();
     _renderedPages = { summary: true };
 
-    // Only auto-navigate to summary if LOB+direction already selected (currentLob set)
-    // Otherwise stay on LOB selection screen
-    if (currentLob && ['sea','air'].includes(currentLob)) {
+    // Only auto-navigate to summary if LOB+direction already selected.
+    // The landing screen is clickable while data is still loading: clicking
+    // the Air row sets currentLob='air' BEFORE any direction is chosen, so
+    // checking currentLob alone sent the user straight into the data the
+    // moment loading finished (Air row open, nav/filters hidden, Summary
+    // showing, no direction picked). directionConfirmed is true only once the
+    // user has actually picked Export/Import via setDirection(); without it
+    // we stay on the 'Select a direction to get started' screen.
+    if (currentLob && ['sea','air'].includes(currentLob) && directionConfirmed) {
       setPage('summary', 'Summary', 'Summary', document.querySelector('#sec-summary-body .nav-item'));
     } else {
       document.querySelectorAll('.page').forEach(p => { p.style.display = 'none'; p.classList.remove('active'); });
