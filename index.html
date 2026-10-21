@@ -1870,25 +1870,13 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
     var container = document.getElementById('sidebar-plane-strip');
     if (!dataEl || !container || typeof lottie === 'undefined') return;
     var animData = JSON.parse(dataEl.textContent);
-    // Wait for layout to settle before measuring, then lock in an explicit
-    // pixel width instead of leaving it flex:1-dependent at the moment
-    // loadAnimation() runs - a measurement taken before layout fully
-    // settles (or before fonts/images finish loading, shifting things)
-    // could lock in a wrong, narrower width, which would look like the
-    // plane stopping partway and not moving on subsequent LOB switches
-    requestAnimationFrame(function() {
-      requestAnimationFrame(function() {
-        var w = container.getBoundingClientRect().width;
-        if (w > 0) container.style.width = w + 'px';
-        lottie.loadAnimation({
-          container: container,
-          renderer: 'svg',
-          loop: true,
-          autoplay: true,
-          animationData: animData,
-          rendererSettings: { preserveAspectRatio: 'none' }
-        });
-      });
+    lottie.loadAnimation({
+      container: container,
+      renderer: 'svg',
+      loop: true,
+      autoplay: true,
+      animationData: animData,
+      rendererSettings: { preserveAspectRatio: 'none' }
     });
   } catch (e) {
     console.warn('Lottie sidebar plane strip failed to load:', e);
