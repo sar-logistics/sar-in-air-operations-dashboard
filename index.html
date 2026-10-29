@@ -1314,7 +1314,7 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
         </div>
 
         <div class="sec-hd">
-          <div class="sec-title">Zone › Job Owner — Ops Lock Pendency (ETD/ETA +7 days, not yet locked)</div>
+          <div class="sec-title">Location › Job Owner — Ops Lock Pendency (ETD/ETA +7 days, not yet locked)</div>
           <div style="display:flex;align-items:center;gap:6px">
             <div class="sec-ct" id="sc-ops-lock-pendency">Loading…</div>
             <div style="width:1px;height:14px;background:var(--border);margin:0 2px"></div>
@@ -1384,7 +1384,7 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
         </div>
 
         <div class="sec-hd">
-          <div class="sec-title">Zone › Job Owner — Total Jobs Created</div>
+          <div class="sec-title">Location › Job Owner — Total Jobs Created</div>
           <div style="display:flex;align-items:center;gap:6px">
             <div class="sec-ct" id="sc-total-jobs">Loading…</div>
             <div style="width:1px;height:14px;background:var(--border);margin:0 2px"></div>
@@ -1394,7 +1394,7 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
         <div class="tbl-wrap">
           <table id="tbl-total-jobs">
             <thead><tr id="thead-total-jobs">
-              <th style="min-width:260px">Zone / Job Owner</th>
+              <th style="min-width:260px">Location / Job Owner</th>
               <th class="col-grand">Grand Total</th>
             </tr></thead>
             <tbody id="tbody-total-jobs"><tr><td colspan="99" style="text-align:center;padding:32px;color:var(--text3)">Loading data…</td></tr></tbody>
@@ -1482,7 +1482,7 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
           </div>
         </div>
         <div class="sec-hd">
-          <div class="sec-title">Zone › Job Owner — Billing Pendency</div>
+          <div class="sec-title">Location › Job Owner — Billing Pendency</div>
           <div style="display:flex;align-items:center;gap:6px">
             <div class="sec-ct" id="sc-unbilled-rev">Loading…</div>
             <div style="width:1px;height:14px;background:var(--border);margin:0 2px"></div>
@@ -1586,7 +1586,7 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
           </div>
         </div>
         <div class="sec-hd">
-          <div class="sec-title">Zone › Job Owner — Jobs Locked with Pending Cost</div>
+          <div class="sec-title">Location › Job Owner — Jobs Locked with Pending Cost</div>
           <div style="display:flex;align-items:center;gap:6px">
             <div class="sec-ct" id="sc-unposted-cost">Loading…</div>
             <div style="width:1px;height:14px;background:var(--border);margin:0 2px"></div>
@@ -3419,10 +3419,10 @@ function renderTotalJobs() {
   const sc = document.getElementById('sc-total-jobs');
   if (sc) sc.textContent = totalCount.toLocaleString() + ' total jobs';
 
-  // Build totalMap: zone → owner → col counts
+  // Build totalMap: location → owner → col counts
   const totalMap = {};
   filtered.forEach(r => {
-    const br = r.zone || 'Cross Sales';
+    const br = rowLocation(r);
     const ow = r.operator  || r.jobOwner || '(Unknown)';
     const ck = getColKey(r, view) || 'other';
     if (!totalMap[br]) totalMap[br] = {};
@@ -3445,7 +3445,7 @@ function renderTotalJobs() {
   const isSingle = (cols.length === 1 && cols[0].single) || !showGrandTotal(view);
   const tbl = document.getElementById('tbl-total-jobs'); if (tbl) tbl.classList.toggle('single-col', isSingle);
   const thead = document.getElementById('thead-total-jobs');
-  if (thead) thead.innerHTML = '<th style="min-width:260px">Zone / Job Owner</th>' +
+  if (thead) thead.innerHTML = '<th style="min-width:260px">Location / Job Owner</th>' +
     (isSingle ? '' : '<th class="col-grand">Grand Total</th>') +
     cols.map(c => `<th style="min-width:${isSingle?'300':'100'}px;text-align:right">${c.label}</th>`).join('');
 
@@ -3462,7 +3462,7 @@ function renderTotalJobs() {
   sortZonesLast(Object.keys(totalMap)).forEach((br, bi) => {
     const bKey  = 'tj' + bi;
     const owMap = totalMap[br] || {};
-    const brRecs = filtered.filter(r => (r.zone || 'Cross Sales') === br);
+    const brRecs = filtered.filter(r => rowLocation(r) === br);
     const brId   = dvReg(brRecs);
     const safeBr = br.replace(/'/g, "\\'");
     const brTo   = {}; cols.forEach(c => { brTo[c.key] = 0; }); let brGrand = 0;
@@ -3535,7 +3535,7 @@ function renderOpsLockPendency() {
   // Build flaggedMap only
   const flaggedMap = {};
   flaggedDD.forEach(r => {
-    const br=r.zone||'Cross Sales', ow=r.operator||r.jobOwner||'(Unknown)', ck=getColKey(r,view)||'other';
+    const br=rowLocation(r), ow=r.operator||r.jobOwner||'(Unknown)', ck=getColKey(r,view)||'other';
     if (!flaggedMap[br]) flaggedMap[br]={};
     if (!flaggedMap[br][ow]) flaggedMap[br][ow]={};
     flaggedMap[br][ow][ck]=(flaggedMap[br][ow][ck]||0)+1;
@@ -3549,7 +3549,7 @@ function renderOpsLockPendency() {
   const isSingle = cols.length===1 && cols[0].single;
   const tbl=document.getElementById('tbl-ops-lock-pendency'); if(tbl)tbl.classList.toggle('single-col',isSingle);
   const thead=document.getElementById('thead-ops-lock-pendency');
-  if(thead) thead.innerHTML='<th style="min-width:260px">Zone / Job Owner</th>'+(isSingle?'':`<th class="col-grand">Grand Total</th>`)+cols.map(c=>`<th style="min-width:${isSingle?'300':'100'}px;text-align:right">${c.label}</th>`).join('');
+  if(thead) thead.innerHTML='<th style="min-width:260px">Location / Job Owner</th>'+(isSingle?'':`<th class="col-grand">Grand Total</th>`)+cols.map(c=>`<th style="min-width:${isSingle?'300':'100'}px;text-align:right">${c.label}</th>`).join('');
 
   const gtFlagId=dvReg(flaggedDD);
   const gFTd=isSingle?'':`<td class="col-grand" style="cursor:pointer" onclick="dvOpen('${gtFlagId}','Grand Total — Ops Lock Pendency','${label}')">${gtFlGrand>0?gtFlGrand.toLocaleString():'<span class="dash">—</span>'}</td>`;
@@ -3559,7 +3559,7 @@ function renderOpsLockPendency() {
 
   sortZonesLast(Object.keys(flaggedMap)).forEach((br,bi)=>{
     const bKey='olp'+bi, owMap=flaggedMap[br]||{};
-    const brFlagRecs=flaggedDD.filter(r=>(r.zone||'Cross Sales')===br);
+    const brFlagRecs=flaggedDD.filter(r=>rowLocation(r)===br);
     const brFlId=dvReg(brFlagRecs), safeBr=br.replace(/'/g,"\\'");
     const brFl={}; cols.forEach(c=>{brFl[c.key]=0;}); let bFG=0;
     Object.values(owMap).forEach(oc=>{cols.forEach(c=>{brFl[c.key]+=(oc[c.key]||0);}); bFG+=Object.values(oc).reduce((a,b)=>a+b,0);});
@@ -3864,7 +3864,7 @@ function groupEtdEtaByShipment(filteredDD, sumField) {
     if (!byShipment[r.shipmentId]) {
       byShipment[r.shipmentId] = {
         shipmentId: r.shipmentId,
-        location: r.location || '(No Branch)',
+        location: rowLocation(r),
         zone: r.zone || 'Cross Sales',
         jobOwner: r.jobOwner || '(Unknown)',
         etdEtaNew: r.etdEtaNew,
@@ -3965,7 +3965,7 @@ function _renderEtdEtaFlagged(pageId, s, flagLabel, sumField, colSetName, colSet
 
   const flaggedMap = {};
   flaggedShipments.forEach(sh => {
-    const br = sh.zone, ow = sh.jobOwner;
+    const br = sh.location, ow = sh.jobOwner;
     const ck = etdEtaColKey(sh, view) || 'other';
     if (!flaggedMap[br]) flaggedMap[br] = {};
     if (!flaggedMap[br][ow]) flaggedMap[br][ow] = {};
@@ -3984,7 +3984,7 @@ function _renderEtdEtaFlagged(pageId, s, flagLabel, sumField, colSetName, colSet
   const tbl = document.getElementById('tbl-' + pageId);
   if (tbl) tbl.classList.toggle('single-col', isSingle);
   const thead = document.getElementById('thead-' + pageId);
-  if (thead) thead.innerHTML = '<th style="min-width:260px">Zone / Job Owner</th>' +
+  if (thead) thead.innerHTML = '<th style="min-width:260px">Location / Job Owner</th>' +
     (isSingle ? '' : '<th class="col-grand">Grand Total</th>') +
     cols.map(c => `<th style="min-width:${isSingle?'300':'100'}px;text-align:right">${c.label}</th>`).join('');
 
@@ -4000,7 +4000,7 @@ function _renderEtdEtaFlagged(pageId, s, flagLabel, sumField, colSetName, colSet
   sortZonesLast(Object.keys(flaggedMap)).forEach((br, bi) => {
     const bKey = s + bi;
     const owMap = flaggedMap[br] || {};
-    const brShipments = flaggedShipments.filter(sh => sh.zone === br);
+    const brShipments = flaggedShipments.filter(sh => sh.location === br);
     const brLines = brShipments.flatMap(sh => sh.lines).filter(r => (Number(r[sumField]) || 0) > 0);
     const brId = dvReg(brLines);
     const safeBr = br.replace(/'/g, "\\'");
@@ -5141,13 +5141,18 @@ function closeDrillBtn() {
 }
 
 // ── LOAD DATA ────────────────────────────────────────────────
-// Sorts zone names alphabetically but always pushes "Cross Sales" (the
-// bucket for jobs whose Sales Person has no Zone Mapping entry) to the end,
-// so it reads as a clear catch-all rather than sitting wherever "C" falls
+// Report grids group rows by Location (Zone is a filter). Jobs with no
+// Location get one '(No Location)' row.
+function rowLocation(r) {
+  return String(r.location || '').trim() || '(No Location)';
+}
+
+// Sorts row-group names alphabetically but always pushes the catch-all
+// buckets ("Cross Sales", "(No Location)") to the end
 function sortZonesLast(keys) {
+  const last = k => k === 'Cross Sales' || k === '(No Location)';
   return keys.sort((a, b) => {
-    if (a === 'Cross Sales') return 1;
-    if (b === 'Cross Sales') return -1;
+    if (last(a) !== last(b)) return last(a) ? 1 : -1;
     return a.localeCompare(b);
   });
 }
