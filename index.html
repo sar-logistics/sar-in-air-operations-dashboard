@@ -5249,24 +5249,31 @@ function applyDirectionField(arr) {
   });
 }
 
-// Builds a Sales Rep -> Zone lookup from zoneMapping and stamps a `zone`
-// field onto every rawSRR and rawWIP record, matched on salesPerson against
-// the mapping's "Sales Rep Name" field (salesRepName after camelCase).
-// Unmatched records get zone = 'Cross Sales' rather than being dropped, so
-// they're still visible/filterable instead of silently disappearing.
+// Stamps a `zone` field onto every rawSRR and rawWIP record. The sheet's own
+// "Zone" column (filled by the Air Ops script's addZoneCol) wins when present;
+// otherwise the same rule is applied here from the "Zone Mapping" tab: the
+// record's salesPerson against "Sales Rep Name" (code after "|" ignored),
+// else its location against the mapping's Location rows. Unmatched records
+// get zone = 'Cross Sales' rather than being dropped, so they're still
+// visible/filterable instead of silently disappearing.
 function applyZoneLookup() {
-  const lookup = {};
+  const byRep = {}, byLocation = {};
   (zoneMapping || []).forEach(z => {
-    const key = stripSalesPersonCode(z.salesRepName || z.displayName).toUpperCase();
-    if (key) lookup[key] = z.zone || 'Cross Sales';
+    const zone = z.zone || 'Cross Sales';
+    const rep = stripSalesPersonCode(z.salesRepName || z.displayName).toUpperCase();
+    const loc = String(z.location || '').trim().toUpperCase();
+    if (rep) byRep[rep] = zone;
+    else if (loc) byLocation[loc] = zone;
   });
   [rawSRR, rawWIP].forEach(arr => {
     (arr || []).forEach(r => {
-      const key = stripSalesPersonCode(r.salesPerson).toUpperCase();
-      r.zone = lookup[key] || 'Cross Sales';
+      if (r.zone) return;
+      r.zone = byRep[stripSalesPersonCode(r.salesPerson).toUpperCase()]
+        || byLocation[String(r.location || '').trim().toUpperCase()]
+        || 'Cross Sales';
     });
   });
-  console.log('[applyZoneLookup] mapping entries:', Object.keys(lookup).length, '| SRR zoned:', (rawSRR||[]).length, '| ETD/ETA zoned:', (rawWIP||[]).length);
+  console.log('[applyZoneLookup] mapping:', Object.keys(byRep).length, 'reps,', Object.keys(byLocation).length, 'locations | SRR zoned:', (rawSRR||[]).length, '| ETD/ETA zoned:', (rawWIP||[]).length);
 }
 
 async function loadData() {
