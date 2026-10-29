@@ -1987,6 +1987,8 @@ let allSRR = [];
 let rawSRR = [];
 let rawWIP  = [];
 let zoneMapping = []; // Sales Rep -> Zone reference data, for Zone segmentation
+let opsMapping = [];  // Ops Mapping tab: Job Owner -> Reporting To (with emails), for data access
+let rlsOwners = null; // Set of visible job-owner keys for the signed-in user; null = sees all jobs
 
 // ── LOB Navigation — 3 State System ──────────────────────────────────────
 // State 1: LOB full screen
@@ -3854,6 +3856,7 @@ function filterEtdEtaByDate(records, pageId) {
   const { from, to } = getDateRange(pageId);
   return (records || []).filter(r => {
     if (!etdEtaMatchesDirection(r)) return false;
+    if (rlsOwners && !rlsOwners.has(ownerKey(r.jobOwner))) return false;
     const d = r.etdEtaNew ? new Date(r.etdEtaNew) : null;
     return d && !isNaN(d) && d >= from && d <= to;
   });
@@ -4352,6 +4355,7 @@ async function refreshData(pageId) {
     // in the same batch response - no separate endpoint for USA (unlike ID/TH's /api/wip)
     rawWIP = data.etdEta || [];
     zoneMapping = data.zoneMapping || [];
+    opsMapping = data.opsMapping || [];
     applyZoneLookup();
     applyRLS();
     initFilters(pageId);
@@ -5288,6 +5292,7 @@ async function loadData() {
     rawWIP = data.etdEta || [];
     console.log('[loadData] ETD/ETA records:', rawWIP.length);
     zoneMapping = data.zoneMapping || [];
+    opsMapping = data.opsMapping || [];
     applyZoneLookup();
     applyRLS();
     setTimeout(updateMainMetricsBadges, 500);
@@ -5619,39 +5624,64 @@ function applyRLS() {
   document.getElementById('sys-usage').style.display  = canSeeTeamPages ? 'flex' : 'none';
   document.getElementById('sys-feedback').style.display = 'flex';
 
-  // Data scoping — Admin is the only bypass. Every other role is scoped
-  // purely by name + reporting-to position in allUsers, ignoring the
-  // role/persona label entirely.
-  if (isAdmin) {
+  // Data scoping — Admin, Strategy, Management, HR, Finance and Ops Head see
+  // every job. Every other role sees its own jobs plus everyone reporting to
+  // it, from the Ops Mapping tab (and Reporting Manager in the Admin Panel).
+  if (SEE_ALL_DATA_ROLES.includes(currentRole)) {
+    rlsOwners = null;
     allSRR = rawSRR.filter(r => (r.direction||'').toLowerCase() === currentDirection.toLowerCase() && matchesCurrentLob(r));
     allJPA = [...rawJPA];
     return;
   }
 
   const email = (currentUser.email || '').toLowerCase().trim();
-  const visibleJobOwners = getVisibleJobOwners(email);
+  rlsOwners = getVisibleJobOwners(email);
 
-  allSRR = rawSRR.filter(r => visibleJobOwners.has((r.jobOwner || '').toLowerCase().trim()) && (r.direction||'').toLowerCase() === currentDirection.toLowerCase() && matchesCurrentLob(r));
-  allJPA = rawJPA.filter(r => visibleJobOwners.has((r.jobOwner || '').toLowerCase().trim()));
+  allSRR = rawSRR.filter(r => rlsOwners.has(ownerKey(r.jobOwner)) && (r.direction||'').toLowerCase() === currentDirection.toLowerCase() && matchesCurrentLob(r));
+  allJPA = rawJPA.filter(r => rlsOwners.has(ownerKey(r.jobOwner)));
+}
+
+// Job-owner names are compared without the " | INZ13" code, case and extra spaces
+function ownerKey(name) {
+  return stripSalesPersonCode(name).replace(/\s+/g, ' ').toLowerCase();
 }
 
 function getVisibleJobOwners(email) {
-  // Returns a Set of visible jobOwner names (lowercased) - this person's own
-  // name plus anyone reporting up to them, recursively, walking the real
+  // Returns a Set of visible job-owner keys (ownerKey) - this person's own
+  // name plus anyone reporting up to them, recursively: first from the Ops
+  // Mapping tab (Job Owner / Reporting To emails), then from the real
   // reportingManager field stored on each allUsers document.
-  if (!allUsers || !allUsers.length) return new Set();
+  const visible = new Set();
+  const emailKey = e => String(e || '').toLowerCase().trim();
+
+  // Ops Mapping: rows where I am the Job Owner, or the Reporting To; repeat
+  // for any reportee who has an email of their own (their team rolls up too)
+  const seenManagers = new Set();
+  (function walk(managerEmail, depth) {
+    if (!managerEmail || depth > 5 || seenManagers.has(managerEmail)) return;
+    seenManagers.add(managerEmail);
+    (opsMapping || []).forEach(m => {
+      if (emailKey(m.jobOwnerEmail) === managerEmail) visible.add(ownerKey(m.jobOwner));
+      if (emailKey(m.reportingToEmail) === managerEmail) {
+        visible.add(ownerKey(m.reportingTo));
+        visible.add(ownerKey(m.jobOwner));
+        walk(emailKey(m.jobOwnerEmail), depth + 1);
+      }
+    });
+  })(email, 0);
+
+  if (!allUsers || !allUsers.length) { visible.delete(''); return visible; }
 
   const me = allUsers.find(u => (u.email || '').toLowerCase().trim() === email);
-  const visible = new Set();
 
-  const myOwnName = (me && (me.jobOwnerName || me.name) || currentUser.name || '').toLowerCase().trim();
+  const myOwnName = ownerKey(me && (me.jobOwnerName || me.name) || currentUser.name || '');
   if (myOwnName) visible.add(myOwnName);
 
   function collectReports(managerEmail, depth) {
     if (depth > 5) return; // safety limit
     allUsers.forEach(u => {
       if ((u.reportingManager || '').toLowerCase().trim() === managerEmail) {
-        const name = (u.jobOwnerName || u.name || '').toLowerCase().trim();
+        const name = ownerKey(u.jobOwnerName || u.name || '');
         if (name && !visible.has(name)) {
           visible.add(name);
           const theirEmail = (u.email || '').toLowerCase().trim();
@@ -5662,6 +5692,7 @@ function getVisibleJobOwners(email) {
   }
 
   collectReports(email, 0);
+  visible.delete('');
   return visible;
 }
 
@@ -5886,6 +5917,7 @@ const ADMIN_ROLES = ['Admin','Co-Admin','admin','co-admin'];   // Co-Admin kept 
 const NO_TEAM_PAGES_ROLES = ['Job Owner','Doc User','Docs','CS']; // no Usage Analytics / Teams
 const USAGE_ALL_USERS_ROLES = [...ADMIN_ROLES,'Strategy','Management','HR','Finance','Ops Head'];
 const USAGE_REPORTEES_ROLES = ['Zonal Manager','Ops Team Leader','Manager','Team Leader'];
+const SEE_ALL_DATA_ROLES = [...ADMIN_ROLES,'Strategy','Management','HR','Finance','Ops Head'];
 const ROLE_COLORS = {
   'Admin':           { bg:'#f3f0ff', color:'#7c3aed', border:'#c4b5fd' },
   'Co-Admin':        { bg:'#f3f0ff', color:'#7c3aed', border:'#c4b5fd' },
