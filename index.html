@@ -550,6 +550,11 @@ body.dashboard-blurred .content::after{background:rgba(15,23,42,0)}
 #tb-filter-row .filter-bar{display:flex;align-items:center;gap:6px;margin-bottom:0}
 #tb-filter-row .filter-label{color:var(--text2);font-size:9.5px;letter-spacing:.08em;font-weight:600}
 #tb-filter-row .filter-btn i{font-size:13px!important}
+#tb-filter-row .ms-trigger{border:1px solid #B9C9DC;background:#F1F5F9;color:var(--navy-900);box-shadow:0 2px 6px rgba(15,31,46,.14), 0 1px 2px rgba(15,31,46,.08);min-width:0;max-width:180px}
+#tb-filter-row .ms-trigger:hover{background:#E5EDF7}
+#tb-filter-row .ms-trigger .ms-label{overflow:hidden;text-overflow:ellipsis}
+.tb-refresh-btn{margin-right:8px}
+.tb-refresh-btn.spinning i{animation:spin .7s linear infinite}
 .filter-label{font-size:9.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text2);white-space:nowrap}
 .filter-select{appearance:none;-webkit-appearance:none;border:1px solid #B9C9DC;border-radius:20px;padding:7px 28px 7px 14px;font-size:12px;font-family:var(--font);color:var(--navy-900);background:#F1F5F9 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%231F3A6E' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center;cursor:pointer;min-width:150px;transition:background .15s;box-shadow:0 2px 6px rgba(15,31,46,.14), 0 1px 2px rgba(15,31,46,.08);color-scheme:light}
 .filter-select:hover{background-color:#E5EDF7}
@@ -1121,6 +1126,7 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
     <div class="tb-divider"></div>
     <div id="tb-filter-row" style="display:flex;align-items:center;gap:8px;flex:1"><!-- filters injected here --></div>
     <div class="tb-spacer"></div>
+    <button class="tb-hamburger-btn tb-refresh-btn" id="tbRefreshBtn" onclick="refreshCurrentPage()" title="Refresh data" style="display:none"><i class="ti ti-refresh"></i></button>
     <div class="tb-hamburger-menu">
       <button class="tb-hamburger-btn" onclick="toggleUserMenu()" id="userMenuBtn">
         <i class="ti ti-menu-2"></i>
@@ -1223,35 +1229,14 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
             <span class="filter-label">To</span>
             <div class="dp-wrap"><div class="dp-trigger" onclick="togglePicker('dp-cto-summary')"><i class="ti ti-calendar-event"></i><span id="dp-cto-summary-lbl" class="dp-placeholder">Pick Date</span></div><div class="dp-dropdown hidden" id="dp-cto-summary"></div></div>
           </div>
-          <div class="add-filters-wrap" id="afw-summary">
-            <button class="add-filters-btn" id="afb-summary" onclick="toggleAddFilters('summary')">
-              <i class="ti ti-adjustments-horizontal" style="font-size:13px"></i> Filters
-            </button>
-            <div class="add-filters-panel" id="afp-summary">
-              <div class="add-filter-row">
-                <div class="add-filter-label">Branch</div>
-                <div class="ms-wrap" id="msw-branch-summary" style="width:100%">
-                  <div class="ms-trigger" onclick="toggleMs('branch-summary')" style="width:100%;box-sizing:border-box"><i class="ti ti-building ms-icon"></i><span class="ms-label" id="msl-branch-summary">All Branches</span><i class="ti ti-chevron-down ms-caret"></i></div>
-                  <div class="ms-dropdown" id="msd-branch-summary"></div>
-                </div>
-              </div>
-              <div class="add-filter-row">
-                <div class="add-filter-label">Job Owner</div>
-                <div class="ms-wrap" id="msw-owner-summary" style="width:100%">
-                  <div class="ms-trigger" onclick="toggleMs('owner-summary')" style="width:100%;box-sizing:border-box"><i class="ti ti-user ms-icon"></i><span class="ms-label" id="msl-owner-summary">All Owners</span><i class="ti ti-chevron-down ms-caret"></i></div>
-                  <div class="ms-dropdown" id="msd-owner-summary"></div>
-                </div>
-              </div>
-              <div class="add-filter-row">
-                <div class="add-filter-label">Zone</div>
-                <div class="ms-wrap" id="msw-zone-summary" style="width:100%">
-                  <div class="ms-trigger" onclick="toggleMs('zone-summary')" style="width:100%;box-sizing:border-box"><i class="ti ti-map-pin ms-icon"></i><span class="ms-label" id="msl-zone-summary">All Zones</span><i class="ti ti-chevron-down ms-caret"></i></div>
-                  <div class="ms-dropdown" id="msd-zone-summary"></div>
-                </div>
-              </div>
-            </div>
+          <div class="ms-wrap" id="msw-owner-summary">
+            <div class="ms-trigger" onclick="toggleMs('owner-summary')"><i class="ti ti-user ms-icon"></i><span class="ms-label" id="msl-owner-summary">All Owners</span><i class="ti ti-chevron-down ms-caret"></i></div>
+            <div class="ms-dropdown" id="msd-owner-summary"></div>
           </div>
-          <button class="dv-btn" onclick="refreshData('summary')" style="display:inline-flex;align-items:center;gap:5px"><i class="ti ti-refresh" style="font-size:13px"></i> Refresh</button>
+          <div class="ms-wrap" id="msw-zone-summary">
+            <div class="ms-trigger" onclick="toggleMs('zone-summary')"><i class="ti ti-map-pin ms-icon"></i><span class="ms-label" id="msl-zone-summary">All Zones</span><i class="ti ti-chevron-down ms-caret"></i></div>
+            <div class="ms-dropdown" id="msd-zone-summary"></div>
+          </div>
         </div>
         <!-- Charts container -->
         <div id="summary-charts" style="overflow-y:auto"></div>
@@ -1300,35 +1285,14 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
             <span class="filter-label">To</span>
             <div class="dp-wrap"><div class="dp-trigger" onclick="togglePicker('dp-cto-ops-lock-pendency')"><i class="ti ti-calendar-event"></i><span id="dp-cto-ops-lock-pendency-lbl" class="dp-placeholder">Pick Date</span></div><div class="dp-dropdown hidden" id="dp-cto-ops-lock-pendency"></div></div>
           </div>
-          <div class="add-filters-wrap" id="afw-ops-lock-pendency">
-            <button class="add-filters-btn" id="afb-ops-lock-pendency" onclick="toggleAddFilters('ops-lock-pendency')">
-              <i class="ti ti-adjustments-horizontal" style="font-size:13px"></i> Filters
-            </button>
-            <div class="add-filters-panel" id="afp-ops-lock-pendency">
-              <div class="add-filter-row">
-                <div class="add-filter-label">Branch</div>
-                <div class="ms-wrap" id="msw-branch-ops-lock-pendency" style="width:100%">
-                  <div class="ms-trigger" onclick="toggleMs('branch-ops-lock-pendency')" style="width:100%;box-sizing:border-box"><i class="ti ti-building ms-icon"></i><span class="ms-label" id="msl-branch-ops-lock-pendency">All Branches</span><i class="ti ti-chevron-down ms-caret"></i></div>
-                  <div class="ms-dropdown" id="msd-branch-ops-lock-pendency"></div>
-                </div>
-              </div>
-              <div class="add-filter-row">
-                <div class="add-filter-label">Job Owner</div>
-                <div class="ms-wrap" id="msw-owner-ops-lock-pendency" style="width:100%">
-                  <div class="ms-trigger" onclick="toggleMs('owner-ops-lock-pendency')" style="width:100%;box-sizing:border-box"><i class="ti ti-user ms-icon"></i><span class="ms-label" id="msl-owner-ops-lock-pendency">All Owners</span><i class="ti ti-chevron-down ms-caret"></i></div>
-                  <div class="ms-dropdown" id="msd-owner-ops-lock-pendency"></div>
-                </div>
-              </div>
-              <div class="add-filter-row">
-                <div class="add-filter-label">Zone</div>
-                <div class="ms-wrap" id="msw-zone-ops-lock-pendency" style="width:100%">
-                  <div class="ms-trigger" onclick="toggleMs('zone-ops-lock-pendency')" style="width:100%;box-sizing:border-box"><i class="ti ti-map-pin ms-icon"></i><span class="ms-label" id="msl-zone-ops-lock-pendency">All Zones</span><i class="ti ti-chevron-down ms-caret"></i></div>
-                  <div class="ms-dropdown" id="msd-zone-ops-lock-pendency"></div>
-                </div>
-              </div>
-            </div>
+          <div class="ms-wrap" id="msw-owner-ops-lock-pendency">
+            <div class="ms-trigger" onclick="toggleMs('owner-ops-lock-pendency')"><i class="ti ti-user ms-icon"></i><span class="ms-label" id="msl-owner-ops-lock-pendency">All Owners</span><i class="ti ti-chevron-down ms-caret"></i></div>
+            <div class="ms-dropdown" id="msd-owner-ops-lock-pendency"></div>
           </div>
-          <button class="dv-btn" onclick="refreshData('ops-lock-pendency')" style="display:inline-flex;align-items:center;gap:5px"><i class="ti ti-refresh" style="font-size:13px"></i> Refresh</button>
+          <div class="ms-wrap" id="msw-zone-ops-lock-pendency">
+            <div class="ms-trigger" onclick="toggleMs('zone-ops-lock-pendency')"><i class="ti ti-map-pin ms-icon"></i><span class="ms-label" id="msl-zone-ops-lock-pendency">All Zones</span><i class="ti ti-chevron-down ms-caret"></i></div>
+            <div class="ms-dropdown" id="msd-zone-ops-lock-pendency"></div>
+          </div>
         </div>
 
         <div class="kpi-row">
@@ -1409,35 +1373,14 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
             <span class="filter-label">To</span>
             <div class="dp-wrap"><div class="dp-trigger" onclick="togglePicker('dp-cto-total-jobs')"><i class="ti ti-calendar-event"></i><span id="dp-cto-total-jobs-lbl" class="dp-placeholder">Pick Date</span></div><div class="dp-dropdown hidden" id="dp-cto-total-jobs"></div></div>
           </div>
-          <div class="add-filters-wrap" id="afw-total-jobs">
-            <button class="add-filters-btn" id="afb-total-jobs" onclick="toggleAddFilters('total-jobs')">
-              <i class="ti ti-adjustments-horizontal" style="font-size:13px"></i> Filters
-            </button>
-            <div class="add-filters-panel" id="afp-total-jobs">
-              <div class="add-filter-row">
-                <div class="add-filter-label">Branch</div>
-                <div class="ms-wrap" id="msw-branch-total-jobs" style="width:100%">
-                  <div class="ms-trigger" onclick="toggleMs('branch-total-jobs')" style="width:100%;box-sizing:border-box"><i class="ti ti-building ms-icon"></i><span class="ms-label" id="msl-branch-total-jobs">All Branches</span><i class="ti ti-chevron-down ms-caret"></i></div>
-                  <div class="ms-dropdown" id="msd-branch-total-jobs"></div>
-                </div>
-              </div>
-              <div class="add-filter-row">
-                <div class="add-filter-label">Job Owner</div>
-                <div class="ms-wrap" id="msw-owner-total-jobs" style="width:100%">
-                  <div class="ms-trigger" onclick="toggleMs('owner-total-jobs')" style="width:100%;box-sizing:border-box"><i class="ti ti-user ms-icon"></i><span class="ms-label" id="msl-owner-total-jobs">All Owners</span><i class="ti ti-chevron-down ms-caret"></i></div>
-                  <div class="ms-dropdown" id="msd-owner-total-jobs"></div>
-                </div>
-              </div>
-              <div class="add-filter-row">
-                <div class="add-filter-label">Zone</div>
-                <div class="ms-wrap" id="msw-zone-total-jobs" style="width:100%">
-                  <div class="ms-trigger" onclick="toggleMs('zone-total-jobs')" style="width:100%;box-sizing:border-box"><i class="ti ti-map-pin ms-icon"></i><span class="ms-label" id="msl-zone-total-jobs">All Zones</span><i class="ti ti-chevron-down ms-caret"></i></div>
-                  <div class="ms-dropdown" id="msd-zone-total-jobs"></div>
-                </div>
-              </div>
-            </div>
+          <div class="ms-wrap" id="msw-owner-total-jobs">
+            <div class="ms-trigger" onclick="toggleMs('owner-total-jobs')"><i class="ti ti-user ms-icon"></i><span class="ms-label" id="msl-owner-total-jobs">All Owners</span><i class="ti ti-chevron-down ms-caret"></i></div>
+            <div class="ms-dropdown" id="msd-owner-total-jobs"></div>
           </div>
-          <button class="dv-btn" onclick="refreshData('total-jobs')" style="display:inline-flex;align-items:center;gap:5px"><i class="ti ti-refresh" style="font-size:13px"></i> Refresh</button>
+          <div class="ms-wrap" id="msw-zone-total-jobs">
+            <div class="ms-trigger" onclick="toggleMs('zone-total-jobs')"><i class="ti ti-map-pin ms-icon"></i><span class="ms-label" id="msl-zone-total-jobs">All Zones</span><i class="ti ti-chevron-down ms-caret"></i></div>
+            <div class="ms-dropdown" id="msd-zone-total-jobs"></div>
+          </div>
         </div>
 
         <div class="sec-hd">
@@ -1500,32 +1443,19 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
             <span class="filter-label">To</span>
             <div class="dp-wrap"><div class="dp-trigger" onclick="togglePicker('dp-cto-unbilled-rev')"><i class="ti ti-calendar-event"></i><span id="dp-cto-unbilled-rev-lbl" class="dp-placeholder">Pick Date</span></div><div class="dp-dropdown hidden" id="dp-cto-unbilled-rev"></div></div>
           </div>
+          <div class="ms-wrap" id="msw-owner-unbilled-rev">
+            <div class="ms-trigger" onclick="toggleMs('owner-unbilled-rev')"><i class="ti ti-user ms-icon"></i><span class="ms-label" id="msl-owner-unbilled-rev">All Owners</span><i class="ti ti-chevron-down ms-caret"></i></div>
+            <div class="ms-dropdown" id="msd-owner-unbilled-rev"></div>
+          </div>
+          <div class="ms-wrap" id="msw-zone-unbilled-rev">
+            <div class="ms-trigger" onclick="toggleMs('zone-unbilled-rev')"><i class="ti ti-map-pin ms-icon"></i><span class="ms-label" id="msl-zone-unbilled-rev">All Zones</span><i class="ti ti-chevron-down ms-caret"></i></div>
+            <div class="ms-dropdown" id="msd-zone-unbilled-rev"></div>
+          </div>
           <div class="add-filters-wrap" id="afw-unbilled-rev">
             <button class="add-filters-btn" id="afb-unbilled-rev" onclick="toggleAddFilters('unbilled-rev')">
               <i class="ti ti-adjustments-horizontal" style="font-size:13px"></i> Filters
             </button>
             <div class="add-filters-panel" id="afp-unbilled-rev">
-              <div class="add-filter-row">
-                <div class="add-filter-label">Branch</div>
-                <div class="ms-wrap" id="msw-branch-unbilled-rev" style="width:100%">
-                  <div class="ms-trigger" onclick="toggleMs('branch-unbilled-rev')" style="width:100%;box-sizing:border-box"><i class="ti ti-building ms-icon"></i><span class="ms-label" id="msl-branch-unbilled-rev">All Branches</span><i class="ti ti-chevron-down ms-caret"></i></div>
-                  <div class="ms-dropdown" id="msd-branch-unbilled-rev"></div>
-                </div>
-              </div>
-              <div class="add-filter-row">
-                <div class="add-filter-label">Job Owner</div>
-                <div class="ms-wrap" id="msw-owner-unbilled-rev" style="width:100%">
-                  <div class="ms-trigger" onclick="toggleMs('owner-unbilled-rev')" style="width:100%;box-sizing:border-box"><i class="ti ti-user ms-icon"></i><span class="ms-label" id="msl-owner-unbilled-rev">All Owners</span><i class="ti ti-chevron-down ms-caret"></i></div>
-                  <div class="ms-dropdown" id="msd-owner-unbilled-rev"></div>
-                </div>
-              </div>
-              <div class="add-filter-row">
-                <div class="add-filter-label">Zone</div>
-                <div class="ms-wrap" id="msw-zone-unbilled-rev" style="width:100%">
-                  <div class="ms-trigger" onclick="toggleMs('zone-unbilled-rev')" style="width:100%;box-sizing:border-box"><i class="ti ti-map-pin ms-icon"></i><span class="ms-label" id="msl-zone-unbilled-rev">All Zones</span><i class="ti ti-chevron-down ms-caret"></i></div>
-                  <div class="ms-dropdown" id="msd-zone-unbilled-rev"></div>
-                </div>
-              </div>
               <div class="add-filter-row">
                 <div class="add-filter-label">Operation Lock Condition</div>
                 <label style="display:flex;align-items:center;gap:9px;font-size:12px;color:var(--text2);cursor:pointer">
@@ -1538,7 +1468,6 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
               </div>
             </div>
           </div>
-          <button class="dv-btn" onclick="refreshData('unbilled-rev')" style="display:inline-flex;align-items:center;gap:5px"><i class="ti ti-refresh" style="font-size:13px"></i> Refresh</button>
         </div>
         <div class="kpi-row" style="grid-template-columns:repeat(2,minmax(0,1fr))">
           <div class="kpi blue">
@@ -1618,32 +1547,19 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
             <span class="filter-label">To</span>
             <div class="dp-wrap"><div class="dp-trigger" onclick="togglePicker('dp-cto-unposted-cost')"><i class="ti ti-calendar-event"></i><span id="dp-cto-unposted-cost-lbl" class="dp-placeholder">Pick Date</span></div><div class="dp-dropdown hidden" id="dp-cto-unposted-cost"></div></div>
           </div>
+          <div class="ms-wrap" id="msw-owner-unposted-cost">
+            <div class="ms-trigger" onclick="toggleMs('owner-unposted-cost')"><i class="ti ti-user ms-icon"></i><span class="ms-label" id="msl-owner-unposted-cost">All Owners</span><i class="ti ti-chevron-down ms-caret"></i></div>
+            <div class="ms-dropdown" id="msd-owner-unposted-cost"></div>
+          </div>
+          <div class="ms-wrap" id="msw-zone-unposted-cost">
+            <div class="ms-trigger" onclick="toggleMs('zone-unposted-cost')"><i class="ti ti-map-pin ms-icon"></i><span class="ms-label" id="msl-zone-unposted-cost">All Zones</span><i class="ti ti-chevron-down ms-caret"></i></div>
+            <div class="ms-dropdown" id="msd-zone-unposted-cost"></div>
+          </div>
           <div class="add-filters-wrap" id="afw-unposted-cost">
             <button class="add-filters-btn" id="afb-unposted-cost" onclick="toggleAddFilters('unposted-cost')">
               <i class="ti ti-adjustments-horizontal" style="font-size:13px"></i> Filters
             </button>
             <div class="add-filters-panel" id="afp-unposted-cost">
-              <div class="add-filter-row">
-                <div class="add-filter-label">Branch</div>
-                <div class="ms-wrap" id="msw-branch-unposted-cost" style="width:100%">
-                  <div class="ms-trigger" onclick="toggleMs('branch-unposted-cost')" style="width:100%;box-sizing:border-box"><i class="ti ti-building ms-icon"></i><span class="ms-label" id="msl-branch-unposted-cost">All Branches</span><i class="ti ti-chevron-down ms-caret"></i></div>
-                  <div class="ms-dropdown" id="msd-branch-unposted-cost"></div>
-                </div>
-              </div>
-              <div class="add-filter-row">
-                <div class="add-filter-label">Job Owner</div>
-                <div class="ms-wrap" id="msw-owner-unposted-cost" style="width:100%">
-                  <div class="ms-trigger" onclick="toggleMs('owner-unposted-cost')" style="width:100%;box-sizing:border-box"><i class="ti ti-user ms-icon"></i><span class="ms-label" id="msl-owner-unposted-cost">All Owners</span><i class="ti ti-chevron-down ms-caret"></i></div>
-                  <div class="ms-dropdown" id="msd-owner-unposted-cost"></div>
-                </div>
-              </div>
-              <div class="add-filter-row">
-                <div class="add-filter-label">Zone</div>
-                <div class="ms-wrap" id="msw-zone-unposted-cost" style="width:100%">
-                  <div class="ms-trigger" onclick="toggleMs('zone-unposted-cost')" style="width:100%;box-sizing:border-box"><i class="ti ti-map-pin ms-icon"></i><span class="ms-label" id="msl-zone-unposted-cost">All Zones</span><i class="ti ti-chevron-down ms-caret"></i></div>
-                  <div class="ms-dropdown" id="msd-zone-unposted-cost"></div>
-                </div>
-              </div>
               <div class="add-filter-row">
                 <div class="add-filter-label">Operation Lock Condition</div>
                 <label style="display:flex;align-items:center;gap:9px;font-size:12px;color:var(--text2);cursor:pointer">
@@ -1656,7 +1572,6 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
               </div>
             </div>
           </div>
-          <button class="dv-btn" onclick="refreshData('unposted-cost')" style="display:inline-flex;align-items:center;gap:5px"><i class="ti ti-refresh" style="font-size:13px"></i> Refresh</button>
         </div>
         <div class="kpi-row" style="grid-template-columns:repeat(2,minmax(0,1fr))">
           <div class="kpi blue">
@@ -2149,11 +2064,15 @@ function hideTopbarFilters() {
     if (prevPage) prevPage.insertBefore(prev, prevPage.firstChild);
   }
   filterRow.style.display = 'none';
+  const refreshBtn = document.getElementById('tbRefreshBtn');
+  if (refreshBtn) refreshBtn.style.display = 'none';
 }
 
 function showTopbarFilters() {
   const filterRow = document.getElementById('tb-filter-row');
   if (filterRow) filterRow.style.display = '';
+  const refreshBtn = document.getElementById('tbRefreshBtn');
+  if (refreshBtn) refreshBtn.style.display = '';
 }
 
 function toggleLobRow(lob) {
@@ -2892,6 +2811,8 @@ function setPage(pageId, title, group, el) {
       activeFilter.style.display = 'flex';
       activeFilter.style.marginBottom = '0';
     }
+    const refreshBtn = document.getElementById('tbRefreshBtn');
+    if (refreshBtn) refreshBtn.style.display = activeFilter ? '' : 'none';
   }
 
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -4406,9 +4327,15 @@ function applyDropdownFilters(data, pageId) {
 }
 
 // ── REFRESH ──────────────────────────────────────────────────
+// Top-bar Refresh: reloads data for the page whose filters are showing
+function refreshCurrentPage() {
+  const bar = document.querySelector('#tb-filter-row .filter-bar');
+  if (bar) refreshData(bar.id.replace('filterbar-', ''));
+}
+
 async function refreshData(pageId) {
-  const btn = document.querySelector('[onclick="refreshData(\''+pageId+'\')"]');
-  if (btn) btn.innerHTML = '<i class="ti ti-refresh" style="font-size:13px;animation:spin .7s linear infinite"></i> Refreshing…';
+  const btn = document.getElementById('tbRefreshBtn');
+  if (btn) btn.classList.add('spinning');
   try {
     const resp = await fetch(BATCH_API + '?t=' + Date.now() + '&forceRefresh=1', { method:'GET', headers:{'Cache-Control':'no-cache, no-store'} });
     const data = await resp.json();
@@ -4429,7 +4356,7 @@ async function refreshData(pageId) {
     renderPage(pageId);
   } catch(e) { console.error('Refresh error:', e); }
   finally {
-    if (btn) btn.innerHTML = '<i class="ti ti-refresh" style="font-size:13px"></i> Refresh';
+    if (btn) btn.classList.remove('spinning');
   }
 }
 
