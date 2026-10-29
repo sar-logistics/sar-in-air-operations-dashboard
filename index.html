@@ -5609,18 +5609,15 @@ function extendSession() {
 
 // ── RLS ──────────────────────────────────────────────────────
 function applyRLS() {
-  const isAdmin      = ['Admin','Co-Admin','admin','co-admin'].includes(currentRole);
-  const isHR         = currentRole === 'HR';
-  const isOpsHead    = currentRole === 'Ops Head';
-  const isManager    = currentRole === 'Manager';
-  const isTeamLeader = currentRole === 'Team Leader';
+  const isAdmin = ADMIN_ROLES.includes(currentRole);
+  const canSeeTeamPages = !NO_TEAM_PAGES_ROLES.includes(currentRole);
 
-  // Nav visibility — unchanged, still based on the role label itself (a
-  // permissions concern, separate from data scoping below)
+  // Nav visibility, by role: Admin Panel is Admin-only; Usage Analytics and
+  // Teams are hidden from Job Owner / Doc User; Tickets is open to every role
   document.getElementById('sys-admin').style.display  = isAdmin ? 'flex' : 'none';
-  document.getElementById('sys-teams').style.display  = (isAdmin || isHR || isOpsHead) ? 'flex' : 'none';
-  document.getElementById('sys-usage').style.display  = (isAdmin || isHR || isOpsHead || isManager || isTeamLeader) ? 'flex' : 'none';
-  document.getElementById('sys-feedback').style.display = isAdmin ? 'flex' : 'none';
+  document.getElementById('sys-teams').style.display  = canSeeTeamPages ? 'flex' : 'none';
+  document.getElementById('sys-usage').style.display  = canSeeTeamPages ? 'flex' : 'none';
+  document.getElementById('sys-feedback').style.display = 'flex';
 
   // Data scoping — Admin is the only bypass. Every other role is scoped
   // purely by name + reporting-to position in allUsers, ignoring the
@@ -5720,18 +5717,13 @@ async function loadUsageAnalytics() {
     });
 
     // RLS: determine which users this person can see
-    const isAdmin      = ['Admin','Co-Admin','admin','co-admin'].includes(currentRole);
-    const isHR         = currentRole === 'HR';
-    const isOpsHead    = currentRole === 'Ops Head';
-    const isManager    = currentRole === 'Manager';
-    const isTeamLeader = currentRole === 'Team Leader';
     const myEmail      = (currentUser.email || '').toLowerCase().trim();
 
     let visibleUsers = users;
 
-    if (!isAdmin && !isHR && !isOpsHead) {
-      // Manager / Team Leader: only see their direct reportees
-      if (isManager || isTeamLeader) {
+    if (!USAGE_ALL_USERS_ROLES.includes(currentRole)) {
+      // Zonal Manager / Ops Team Leader: only see their direct reportees
+      if (USAGE_REPORTEES_ROLES.includes(currentRole)) {
         visibleUsers = users.filter(u => {
           const mgr = (u.reportingManager || '').toLowerCase().trim();
           return mgr === myEmail;
@@ -5889,25 +5881,36 @@ function exportUsageToExcel() {
 }
 
 // ── ADMIN PANEL ──────────────────────────────────────────────
-const ROLES = ['Admin','Co-Admin','HR','Ops Head','Manager','Team Leader','Job Owner','Docs','CS'];
+const ROLES = ['Admin','Strategy','Management','HR','Finance','Zonal Manager','Ops Head','Ops Team Leader','Job Owner','Doc User'];
+const ADMIN_ROLES = ['Admin','Co-Admin','admin','co-admin'];   // Co-Admin kept for older user records
+const NO_TEAM_PAGES_ROLES = ['Job Owner','Doc User','Docs','CS']; // no Usage Analytics / Teams
+const USAGE_ALL_USERS_ROLES = [...ADMIN_ROLES,'Strategy','Management','HR','Finance','Ops Head'];
+const USAGE_REPORTEES_ROLES = ['Zonal Manager','Ops Team Leader','Manager','Team Leader'];
 const ROLE_COLORS = {
-  'Admin':        { bg:'#f3f0ff', color:'#7c3aed', border:'#c4b5fd' },
-  'Co-Admin':     { bg:'#f3f0ff', color:'#7c3aed', border:'#c4b5fd' },
-  'HR':           { bg:'#fdf2ff', color:'#9333ea', border:'#e9d5ff' },
-  'Ops Head':     { bg:'#ffe4e6', color:'#e11d48', border:'#fda4af' },
-  'Manager':      { bg:'#e0f2fe', color:'#0369a1', border:'#7dd3fc' },
-  'Team Leader':  { bg:'#d1fae5', color:'#065f46', border:'#6ee7b7' },
-  'Job Owner':    { bg:'#fef3c7', color:'#b45309', border:'#fcd34d' },
+  'Admin':           { bg:'#f3f0ff', color:'#7c3aed', border:'#c4b5fd' },
+  'Co-Admin':        { bg:'#f3f0ff', color:'#7c3aed', border:'#c4b5fd' },
+  'Strategy':        { bg:'#eef2ff', color:'#4338ca', border:'#a5b4fc' },
+  'Management':      { bg:'#f0f9ff', color:'#075985', border:'#7dd3fc' },
+  'HR':              { bg:'#fdf2ff', color:'#9333ea', border:'#e9d5ff' },
+  'Finance':         { bg:'#ecfdf5', color:'#047857', border:'#6ee7b7' },
+  'Zonal Manager':   { bg:'#e0f2fe', color:'#0369a1', border:'#7dd3fc' },
+  'Ops Head':        { bg:'#ffe4e6', color:'#e11d48', border:'#fda4af' },
+  'Ops Team Leader': { bg:'#d1fae5', color:'#065f46', border:'#6ee7b7' },
+  'Job Owner':       { bg:'#fef3c7', color:'#b45309', border:'#fcd34d' },
+  'Doc User':        { bg:'#fff7ed', color:'#c2410c', border:'#fdba74' },
 };
 
 const ROLE_GROUPS = [
-  { label: 'ADMINISTRATION',     roles: ['Admin','Co-Admin','HR','admin','co-admin','hr'] },
+  { label: 'ADMINISTRATION',     roles: ['Admin','Co-Admin','admin','co-admin'] },
+  { label: 'STRATEGY',           roles: ['Strategy','strategy'] },
+  { label: 'MANAGEMENT',         roles: ['Management','management'] },
+  { label: 'HR',                 roles: ['HR','hr'] },
+  { label: 'FINANCE',            roles: ['Finance','finance'] },
+  { label: 'ZONAL MANAGER',      roles: ['Zonal Manager','zonal manager'] },
   { label: 'OPS HEAD',           roles: ['Ops Head','ops head'] },
-  { label: 'MANAGER',            roles: ['Manager','manager'] },
-  { label: 'TEAM LEADER',        roles: ['Team Leader','team leader'] },
+  { label: 'OPS TEAM LEADER',    roles: ['Ops Team Leader','ops team leader'] },
   { label: 'JOB OWNER',          roles: ['Job Owner','job owner'] },
-  { label: 'DOCS',               roles: ['Docs','docs'] },
-  { label: 'CS',                 roles: ['CS','cs'] },
+  { label: 'DOC USER',           roles: ['Doc User','doc user'] },
 ];
 
 async function loadAdminPanel() {
@@ -6022,7 +6025,7 @@ function renderAddUserModal(users) {
   const existing = document.getElementById('addUserModal');
   if (existing) existing.remove();
 
-  const allRoles = [...ROLE_GROUPS.flatMap(g => g.roles), ...ROLES].filter((v,i,a)=>a.indexOf(v)===i);
+  const allRoles = ROLES;
   const modal = document.createElement('div');
   modal.id = 'addUserModal';
   modal.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:700;align-items:center;justify-content:center';
@@ -6166,7 +6169,7 @@ function openEditUser(email) {
 
   const selectStyle = `width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;color:#0f172a;outline:none;background:#f8fafc;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center`;
   const inputStyle  = `width:100%;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;color:#0f172a;outline:none;background:#f8fafc`;
-  const allRoles    = [...ROLE_GROUPS.flatMap(g => g.roles), ...ROLES].filter((v,i,a)=>a.indexOf(v)===i);
+  const allRoles    = ROLES.includes(u.role) || !u.role ? ROLES : [...ROLES, u.role];  // keep an older role selectable
 
   let f = `
     <div style="margin-bottom:18px">
@@ -6886,7 +6889,7 @@ document.addEventListener('mousemove', e => {
 const CSV_TEMPLATE_HEADERS = ['Name','Email','Role','Phone','Reporting Manager Email','Status'];
 const CSV_REQUIRED = ['Name','Email','Role'];
 const VALID_ROLES_IMPORT = [
-  'Admin','Co-Admin','HR','Ops Head','Manager','Team Leader','Job Owner'
+  'Admin','Strategy','Management','HR','Finance','Zonal Manager','Ops Head','Ops Team Leader','Job Owner','Doc User'
 ];
 
 let _importRows = []; // parsed + validated rows
