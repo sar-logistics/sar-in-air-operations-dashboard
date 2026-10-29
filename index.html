@@ -2764,8 +2764,8 @@ function syncUniversalFilters(oldSuffix, newSuffix) {
   const newQ = document.getElementById('quarter-' + newSuffix);
   if (oldQ && newQ) newQ.value = oldQ.value;
 
-  // Add Filters panel: Zone/Branch/Owner multi-selects
-  ['branch-', 'owner-'].forEach(prefix => {
+  // Job Owner / Zone multi-selects carry over to the next page
+  ['branch-', 'owner-', 'zone-'].forEach(prefix => {
     const oldKey = prefix + oldSuffix, newKey = prefix + newSuffix;
     if (msState[oldKey] !== undefined && document.getElementById('msw-' + newKey)) {
       msState[newKey] = msState[oldKey] instanceof Set ? new Set(msState[oldKey]) : msState[oldKey];
@@ -3411,9 +3411,10 @@ function renderTotalJobs() {
   // Hide/show scorecards and grand total based on view
   const _kpiRow = document.querySelector('#page-total-jobs .kpi-row');
   if (_kpiRow) _kpiRow.style.display = showScorecards(view) ? '' : 'none';
-  const filtered = applyAdditionalFilters(applyDropdownFilters(filterByDate(allSRR, pageId), pageId), pageId);
+  const inPeriod = filterByDate(allSRR, pageId);
+  const filtered = applyAdditionalFilters(applyDropdownFilters(inPeriod, pageId), pageId);
 
-  populateFilters(pageId, filtered);
+  populateFilters(pageId, inPeriod);
 
   const totalCount = filtered.length;
   const sc = document.getElementById('sc-total-jobs');
@@ -3518,7 +3519,7 @@ function renderOpsLockPendency() {
   const flaggedCount = flaggedDD.length;
   const pct = totalJobs > 0 ? ((flaggedCount / totalJobs) * 100).toFixed(1) : '0.0';
 
-  populateFilters(pageId, filteredDD);
+  populateFilters(pageId, filtered);
 
   // Scorecards — clickable
   const kT = document.getElementById('kv-olp-total');
@@ -3890,8 +3891,9 @@ function _renderEtdEtaFlagged(pageId, s, flagLabel, sumField, colSetName, colSet
   const _kpiRow = document.querySelector('#page-' + pageId + ' .kpi-row');
   if (_kpiRow) _kpiRow.style.display = showScorecards(view) ? '' : 'none';
 
-  let filteredDD = applyAdditionalFilters(applyDropdownFilters(filterEtdEtaByDate(rawWIP, pageId), pageId), pageId);
-  populateFilters(pageId, filteredDD);
+  const inPeriod = filterEtdEtaByDate(rawWIP, pageId);
+  let filteredDD = applyAdditionalFilters(applyDropdownFilters(inPeriod, pageId), pageId);
+  populateFilters(pageId, inPeriod);
   const shipments = groupEtdEtaByShipment(filteredDD, sumField);
   // Jobs Locked with Pending Cost, per the requirements doc, is "Ops Lock =
   // Yes AND cost still pending" - not just cost pending alone. requireOpsLock
@@ -6336,8 +6338,9 @@ function renderSummary() {
   if (!container) return;
 
   const { cols, label, view } = getColumns(pageId);
-  const filtered  = applyDropdownFilters(filterByDate(allSRR, pageId), pageId);
-  populateFilters(pageId, filtered);
+  const inPeriod  = filterByDate(allSRR, pageId);
+  const filtered  = applyDropdownFilters(inPeriod, pageId);
+  populateFilters(pageId, inPeriod);
 
   if (!cols.length) { container.innerHTML = '<div style="padding:40px;color:#94a3b8;text-align:center">No data for the selected period.</div>'; return; }
 
