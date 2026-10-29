@@ -627,7 +627,7 @@ body.dashboard-blurred .content::after{background:rgba(15,23,42,0)}
 .dp-dropdown:not(.hidden){max-height:360px;opacity:1;padding:16px;transform:scaleX(1)}
 .dp-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .dp-header i{color:#F0F6FC}
-.dp-month-year{font-size:13px;font-weight:600;color:#F0F6FC}
+.dp-month-year{font-size:13px;font-weight:600;color:var(--text1)}
 .dp-days-hdr{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px}
 .dp-day-lbl{text-align:center;font-size:10px;font-weight:600;color:var(--text3);padding:2px 0}
 .dp-days{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
@@ -3044,9 +3044,9 @@ function renderDayPicker(id) {
 
   dd.innerHTML = `
     <div class="dp-header">
-      <button class="mp-nav" onclick="dpChangeMonth('${id}',-1)">&#8249;</button>
+      <button class="mp-nav" onclick="event.stopPropagation();dpChangeMonth('${id}',-1)">&#8249;</button>
       <span class="dp-month-year">${monthLabel}</span>
-      <button class="mp-nav" onclick="dpChangeMonth('${id}',1)">&#8250;</button>
+      <button class="mp-nav" onclick="event.stopPropagation();dpChangeMonth('${id}',1)">&#8250;</button>
     </div>
     <div class="dp-days-hdr">${daysHtml}</div>
     <div class="dp-days">${cellsHtml}</div>
@@ -4731,7 +4731,7 @@ function updateRateLabel() {} // no-op - no rate to show, kept so existing calls
 function fmtIndian(n) {
   const abs = Math.abs(n);
   const sign = n < 0 ? '-' : '';
-  return sign + '₹' + abs.toLocaleString('en-US', { maximumFractionDigits: 2 });
+  return sign + '₹' + abs.toLocaleString('en-US', { maximumFractionDigits: 0 });
 }
 
 function formatDvDate(v) {
