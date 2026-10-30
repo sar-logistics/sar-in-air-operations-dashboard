@@ -1195,6 +1195,7 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
           <select class="filter-select" id="view-summary" onchange="onViewChange('summary')" style="min-width:150px">
             <option value="monthly">Monthly View</option>
             <option value="weekly">Weekly View</option>
+            <option value="fortnightly">Fortnightly View</option>
             <option value="quarterly">Quarterly View</option>
             <option value="yearly">Yearly View</option>
             <option value="custom">Custom Range</option>
@@ -1251,6 +1252,7 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
           <select class="filter-select" id="view-ops-lock-pendency" onchange="onViewChange('ops-lock-pendency')">
             <option value="monthly">Monthly View</option>
             <option value="weekly">Weekly View</option>
+            <option value="fortnightly">Fortnightly View</option>
             <option value="quarterly">Quarterly View</option>
             <option value="yearly">Yearly View</option>
             <option value="custom">Custom Range</option>
@@ -1339,6 +1341,7 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
           <select class="filter-select" id="view-total-jobs" onchange="onViewChange('total-jobs')">
             <option value="monthly">Monthly View</option>
             <option value="weekly">Weekly View</option>
+            <option value="fortnightly">Fortnightly View</option>
             <option value="quarterly">Quarterly View</option>
             <option value="yearly">Yearly View</option>
             <option value="custom">Custom Range</option>
@@ -1409,6 +1412,7 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
           <select class="filter-select" id="view-unbilled-rev" onchange="onViewChange('unbilled-rev')">
             <option value="monthly">Monthly View</option>
             <option value="weekly">Weekly View</option>
+            <option value="fortnightly">Fortnightly View</option>
             <option value="quarterly">Quarterly View</option>
             <option value="yearly">Yearly View</option>
             <option value="custom">Custom Range</option>
@@ -1504,6 +1508,7 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
           <select class="filter-select" id="view-unposted-cost" onchange="onViewChange('unposted-cost')">
             <option value="monthly">Monthly View</option>
             <option value="weekly">Weekly View</option>
+            <option value="fortnightly">Fortnightly View</option>
             <option value="quarterly">Quarterly View</option>
             <option value="yearly">Yearly View</option>
             <option value="custom">Custom Range</option>
@@ -2743,7 +2748,7 @@ function syncUniversalFilters(oldSuffix, newSuffix) {
   if (oldView && newView) newView.value = viewVal;
   ['monthly','weekly','quarterly','yearly','custom'].forEach(v => {
     const el = document.getElementById('fc-' + v + '-' + newSuffix);
-    if (el) el.style.display = (v === viewVal) ? 'flex' : 'none';
+    if (el) el.style.display = (v === pickerViewOf(viewVal)) ? 'flex' : 'none';
   });
 
   // Quarter selector (Q1-Q4)
@@ -2991,12 +2996,20 @@ function selectDay(id, day, yearOverride, monthOverride) {
 }
 
 // ── DATE VIEW ────────────────────────────────────────────────
+// Fortnightly has no picker of its own - it uses Weekly's single Month picker
+function pickerViewOf(view) { return view === 'fortnightly' ? 'weekly' : view; }
+
+// Fortnight of a date: 1st-15th is the first half, 16th to month end the second
+function fortnightKey(d) {
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + (d.getDate() <= 15 ? '-1' : '-2');
+}
+
 function onViewChange(pageId) {
   const view = document.getElementById('view-' + pageId).value;
   const views = ['monthly','weekly','quarterly','yearly','custom'];
   views.forEach(v => {
     const el = document.getElementById('fc-' + v + '-' + pageId);
-    if (el) el.style.display = (v === view) ? 'flex' : 'none';
+    if (el) el.style.display = (v === pickerViewOf(view)) ? 'flex' : 'none';
   });
   if (view !== 'custom') renderPage(pageId);
 }
@@ -3064,6 +3077,14 @@ function getDateRange(pageId) {
         label = 'Jan ' + now.getFullYear() + ' → ' + MONTHS[now.getMonth()] + ' ' + now.getFullYear();
       }
     }
+  } else if (view === 'fortnightly') {
+    // One month (the Month picker), split into 1-15 and 16-end in getColumns
+    const wkState = pickerState['mp-wk-' + pageId];
+    const yr = wkState && wkState.selected ? wkState.selected.year  : now.getFullYear();
+    const mo = wkState && wkState.selected ? wkState.selected.month : now.getMonth();
+    from  = new Date(yr, mo, 1);
+    to    = new Date(yr, mo + 1, 0, 23, 59, 59);
+    label = MONTHS[mo] + ' ' + yr;
   } else if (view === 'weekly') {
     const wkState = pickerState['mp-wk-' + pageId];
     let yr, mo;
@@ -3240,6 +3261,17 @@ function getColumns(pageId) {
     }
   } else if (view === 'custom') {
     cols.push({ key: 'custom', label: label || 'Custom Range', single: true });
+  } else if (view === 'fortnightly') {
+    // Two columns per month: 1-15, then 16 to month end (15 or 16 days)
+    let d = new Date(from.getFullYear(), from.getMonth(), 1);
+    while (d <= to) {
+      const ym  = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+      const mo  = d.toLocaleString('default',{month:'short'}) + ' \'' + String(d.getFullYear()).slice(2);
+      const end = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+      cols.push({ key: ym + '-1', label: '1–15 ' + mo });
+      cols.push({ key: ym + '-2', label: '16–' + end + ' ' + mo });
+      d.setMonth(d.getMonth() + 1);
+    }
   } else {
     let d = new Date(from.getFullYear(), from.getMonth(), 1);
     while (d <= to) {
@@ -3294,6 +3326,7 @@ function getColKey(row, view) {
     return 'q' + fiscalQuarterOf(d) + '-fy-' + fiscalYearOf(d);
   }
   if (view === 'custom') return 'custom';
+  if (view === 'fortnightly') return fortnightKey(d);
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
 }
 
@@ -3767,7 +3800,7 @@ function openDrillWip(shipRecs, wipByShipment, title, sub, isWipLines, colSet) {
 // Generate cols from actual records (handles both SRR and WIP date formats)
 function getColumnsFromRecords(records, pageId, view) {
   const { cols } = getColumns(pageId);
-  if (view === 'monthly' || view === 'weekly' || view === 'custom') return cols;
+  if (view === 'monthly' || view === 'fortnightly' || view === 'weekly' || view === 'custom') return cols;
 
   // For quarterly/yearly, re-generate cols based on actual record dates
   const keys = new Set();
@@ -3807,12 +3840,18 @@ function getColumnsFromRecords(records, pageId, view) {
 // First 6 columns are frozen (see .dv-tbl nth-child CSS) - order matches
 // what was requested: Job No., LOB, ETD/ETA New, Charge, Unbilled Revenue,
 // Unposted Cost, then everything else scrolls normally
+// A job / charge line counts as pending only from ₹1 up - paise left over
+// from rounding are not pending
+const PENDING_MIN = 1;
+
 const DV_COLS_WIP_REVENUE = [
   { key:'shipmentId',          label:'Job No.'                             },
   { key:'lob',                  label:'LOB'                                 },
   { key:'etdEtaNew',           label:'ETD/ETA New',       date:true        },
   { key:'charge',              label:'Charge'                              },
   { key:'unbilledRevenue',     label:'Unbilled Revenue',  num:true         },
+  { key:'receivableFrom',      label:'Receivable From'                     },
+  { key:'payableTo',           label:'Payable To'                          },
   { key:'jobDate',              label:'Job Date',         date:true         },
   { key:'organization',        label:'Organization'                        },
   { key:'jobOwner',            label:'Job Owner'                           },
@@ -3834,6 +3873,8 @@ const DV_COLS_WIP_COST = [
   { key:'etdEtaNew',           label:'ETD/ETA New',       date:true        },
   { key:'charge',              label:'Charge'                              },
   { key:'unpostedCost',        label:'Unposted Cost',     num:true         },
+  { key:'receivableFrom',      label:'Receivable From'                     },
+  { key:'payableTo',           label:'Payable To'                          },
   { key:'jobDate',              label:'Job Date',         date:true         },
   { key:'organization',        label:'Organization'                        },
   { key:'jobOwner',            label:'Job Owner'                           },
@@ -3864,6 +3905,7 @@ function etdEtaColKey(row, view) {
     return 'q' + fiscalQuarterOf(d) + '-fy-' + fiscalYearOf(d);
   }
   if (view === 'custom') return 'custom';
+  if (view === 'fortnightly') return fortnightKey(d);
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
 }
 
@@ -3938,13 +3980,13 @@ function _renderEtdEtaFlagged(pageId, s, flagLabel, sumField, colSetName, colSet
     const cutoff = new Date(); cutoff.setHours(0,0,0,0); cutoff.setDate(cutoff.getDate() - cutoffDays);
     return d < cutoff;
   };
-  const flaggedShipments = shipments.filter(sh => sh.sum > 0 && (!requireOpsLock || isOpsLocked(sh)) && isPastCutoff(sh));
+  const flaggedShipments = shipments.filter(sh => sh.sum >= PENDING_MIN && (!requireOpsLock || isOpsLocked(sh)) && isPastCutoff(sh));
 
   const totalJobs = shipments.length;
   const flaggedCount = flaggedShipments.length;
   const pct = totalJobs > 0 ? ((flaggedCount / totalJobs) * 100).toFixed(1) : '0.0';
 
-  const flaggedLines = flaggedShipments.flatMap(sh => sh.lines).filter(r => (Number(r[sumField]) || 0) > 0);
+  const flaggedLines = flaggedShipments.flatMap(sh => sh.lines).filter(r => (Number(r[sumField]) || 0) >= PENDING_MIN);
 
   const kTotal = document.getElementById('kv-' + s + '-total');
   if (kTotal) {
@@ -4017,12 +4059,12 @@ function _renderEtdEtaFlagged(pageId, s, flagLabel, sumField, colSetName, colSet
     (isSingle ? '' : '<th class="col-grand">Grand Total</th>') +
     cols.map(c => `<th style="min-width:${isSingle?'300':'100'}px;text-align:right">${c.label}</th>`).join('');
 
-  const gtLines = flaggedShipments.flatMap(sh => sh.lines).filter(r => (Number(r[sumField]) || 0) > 0);
+  const gtLines = flaggedShipments.flatMap(sh => sh.lines).filter(r => (Number(r[sumField]) || 0) >= PENDING_MIN);
   const gtId = dvReg(gtLines);
   let h = `<tr class="gt-block">
     <td style="padding-left:10px"><i class="rc open" id="rc-gt-${s}" onclick="toggleRows('gt-${s}',event)">▼</i> <strong>GRAND TOTAL</strong></td>
     ${isSingle ? '' : `<td class="col-grand" style="cursor:pointer" onclick="dvOpen('${gtId}','Grand Total — ${flagLabel}','${label}','${colSetName}')">${gtFlGrand > 0 ? (isAmountMode ? fmtIndian(gtFlGrand) : gtFlGrand.toLocaleString()) : '<span class="dash">—</span>'}</td>`}
-    ${colCells(gtFl, flaggedShipments.flatMap(sh => sh.lines).filter(r => (Number(r[sumField]) || 0) > 0), cols, colKeyFn, 'Grand Total — '+flagLabel, label, colSetName, isAmountMode)}
+    ${colCells(gtFl, flaggedShipments.flatMap(sh => sh.lines).filter(r => (Number(r[sumField]) || 0) >= PENDING_MIN), cols, colKeyFn, 'Grand Total — '+flagLabel, label, colSetName, isAmountMode)}
   </tr>
   <tr class="gt-sep"><td colspan="${cols.length + (isSingle?1:2)}"></td></tr>`;
 
@@ -4030,7 +4072,7 @@ function _renderEtdEtaFlagged(pageId, s, flagLabel, sumField, colSetName, colSet
     const bKey = s + bi;
     const owMap = flaggedMap[br] || {};
     const brShipments = flaggedShipments.filter(sh => sh.location === br);
-    const brLines = brShipments.flatMap(sh => sh.lines).filter(r => (Number(r[sumField]) || 0) > 0);
+    const brLines = brShipments.flatMap(sh => sh.lines).filter(r => (Number(r[sumField]) || 0) >= PENDING_MIN);
     const brId = dvReg(brLines);
     const safeBr = br.replace(/'/g, "\\'");
 
@@ -4045,14 +4087,14 @@ function _renderEtdEtaFlagged(pageId, s, flagLabel, sumField, colSetName, colSet
     h += `<tr class="br-row">
       <td>${av}<i class="rc" id="rc-${bKey}" onclick="toggleRows('${bKey}',event)">▶</i> ${br}</td>
       ${isSingle ? '' : `<td class="col-grand" style="cursor:pointer" onclick="dvOpen('${brId}','${safeBr} — ${flagLabel}','${label}','${colSetName}')">${brGrand > 0 ? (isAmountMode ? fmtIndian(brGrand) : brGrand.toLocaleString()) : '<span class="dash">—</span>'}</td>`}
-      ${colCells(brFl, brShipments.flatMap(sh => sh.lines).filter(r => (Number(r[sumField]) || 0) > 0), cols, colKeyFn, safeBr+' — '+flagLabel, label, colSetName, isAmountMode)}
+      ${colCells(brFl, brShipments.flatMap(sh => sh.lines).filter(r => (Number(r[sumField]) || 0) >= PENDING_MIN), cols, colKeyFn, safeBr+' — '+flagLabel, label, colSetName, isAmountMode)}
     </tr>`;
 
     Object.keys(owMap).sort().forEach((ow, oi) => {
       const owKey = bKey + 'o' + oi;
       const owCols = owMap[ow] || {};
       const owShipments = brShipments.filter(sh => sh.jobOwner === ow);
-      const owLines = owShipments.flatMap(sh => sh.lines).filter(r => (Number(r[sumField]) || 0) > 0);
+      const owLines = owShipments.flatMap(sh => sh.lines).filter(r => (Number(r[sumField]) || 0) >= PENDING_MIN);
       const owId = dvReg(owLines);
       const safeOw = ow.replace(/'/g, "\\'");
       let owGrand = 0; cols.forEach(c => { owGrand += (owCols[c.key] || 0); });
@@ -4060,7 +4102,7 @@ function _renderEtdEtaFlagged(pageId, s, flagLabel, sumField, colSetName, colSet
       h += `<tr class="jo-row r-br-${bKey} r-hidden" data-grp="${bKey}">
         <td>${oav}${ow} <span style="font-size:10px;color:var(--text3);margin-left:4px">(Job Owner)</span></td>
         ${isSingle ? '' : `<td class="col-grand" style="cursor:pointer" onclick="dvOpen('${owId}','${safeOw} — ${flagLabel}','${label}','${colSetName}')">${owGrand > 0 ? (isAmountMode ? fmtIndian(owGrand) : owGrand.toLocaleString()) : '<span class="dash">—</span>'}</td>`}
-        ${colCells(owCols, owShipments.flatMap(sh => sh.lines).filter(r => (Number(r[sumField]) || 0) > 0), cols, colKeyFn, safeOw+' — '+flagLabel, label, colSetName, isAmountMode)}
+        ${colCells(owCols, owShipments.flatMap(sh => sh.lines).filter(r => (Number(r[sumField]) || 0) >= PENDING_MIN), cols, colKeyFn, safeOw+' — '+flagLabel, label, colSetName, isAmountMode)}
       </tr>`;
     });
   });
@@ -6500,7 +6542,7 @@ function renderSummary() {
       const ck = etdEtaColKey(sh, view);
       if (!ck || totals[ck] === undefined) return;
       totals[ck]++;
-      if (sh.sum > 0 && (!requireOpsLock || isOpsLocked(sh)) && isPastCutoff(sh)) {
+      if (sh.sum >= PENDING_MIN && (!requireOpsLock || isOpsLocked(sh)) && isPastCutoff(sh)) {
         flags[ck]++;
         flagAmounts[ck] += sh.sum;
       }
@@ -6846,12 +6888,14 @@ function buildSummaryChart(cols, totals, flags, report, view) {
   const isQuarterly = view === 'quarterly';
   const isYearly    = view === 'yearly';
   const isCustom    = view === 'custom';
+  const isFortnight = view === 'fortnightly';
 
   // Y-axis label width — auto-sized per view
   const PAD_L = isWeekly    ? 115   // "W17" + "26 Apr–2 May" — needs more room
               : isQuarterly ? 90
               : isYearly    ? 100
               : isCustom    ? 90
+              : isFortnight ? 100
               : 68;
 
   const PAD_T  = 12;
