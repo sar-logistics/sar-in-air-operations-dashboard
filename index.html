@@ -1989,6 +1989,7 @@ let rawWIP  = [];
 let zoneMapping = []; // Sales Rep -> Zone reference data, for Zone segmentation
 let opsMapping = [];  // Ops Mapping tab: Job Owner -> Reporting To (with emails), for data access
 let rlsOwners = null; // Set of visible job-owner keys for the signed-in user; null = sees all jobs
+let rlsZones = new Set(); // zones the signed-in user sees in full (their Admin Panel zone)
 
 // ── LOB Navigation — 3 State System ──────────────────────────────────────
 // State 1: LOB full screen
@@ -3856,7 +3857,7 @@ function filterEtdEtaByDate(records, pageId) {
   const { from, to } = getDateRange(pageId);
   return (records || []).filter(r => {
     if (!etdEtaMatchesDirection(r)) return false;
-    if (rlsOwners && !rlsOwners.has(ownerKey(r.jobOwner))) return false;
+    if (!rlsAllows(r)) return false;
     const d = r.etdEtaNew ? new Date(r.etdEtaNew) : null;
     return d && !isNaN(d) && d >= from && d <= to;
   });
@@ -5629,6 +5630,7 @@ function applyRLS() {
   // it, from the Ops Mapping tab (and Reporting Manager in the Admin Panel).
   if (SEE_ALL_DATA_ROLES.includes(currentRole)) {
     rlsOwners = null;
+    rlsZones = new Set();
     allSRR = rawSRR.filter(r => (r.direction||'').toLowerCase() === currentDirection.toLowerCase() && matchesCurrentLob(r));
     allJPA = [...rawJPA];
     return;
@@ -5636,9 +5638,41 @@ function applyRLS() {
 
   const email = (currentUser.email || '').toLowerCase().trim();
   rlsOwners = getVisibleJobOwners(email);
+  // Zone(s) set on this user's own record in the Admin Panel (not inherited
+  // from a manager) - e.g. a Zonal Manager sees every job in their zone
+  const me = (allUsers || []).find(u => (u.email || '').toLowerCase().trim() === email);
+  rlsZones = new Set(me && me.zones && me.zones.length ? me.zones : autoZonesFor(me));
 
-  allSRR = rawSRR.filter(r => rlsOwners.has(ownerKey(r.jobOwner)) && (r.direction||'').toLowerCase() === currentDirection.toLowerCase() && matchesCurrentLob(r));
-  allJPA = rawJPA.filter(r => rlsOwners.has(ownerKey(r.jobOwner)));
+  allSRR = rawSRR.filter(r => rlsAllows(r) && (r.direction||'').toLowerCase() === currentDirection.toLowerCase() && matchesCurrentLob(r));
+  allJPA = rawJPA.filter(rlsAllows);
+}
+
+// Is this job visible to the signed-in (scoped) user: their team's job, or in their zone
+function rlsAllows(r) {
+  return !rlsOwners || rlsOwners.has(ownerKey(r.jobOwner)) || rlsZones.has(r.zone);
+}
+
+// A Zonal Manager's zone(s), read from the zone names in the Zone Mapping tab:
+// "INAZ02 (Mumbai) - Aniket M" is managed by that zone's sales rep whose name
+// starts with "Aniket M" (Aniket Mhapankar). Used when the user has no Zone
+// picked in the Admin Panel.
+function autoZonesFor(user) {
+  if (!user || user.role !== 'Zonal Manager') return [];
+  const me = ownerKey(user.jobOwnerName || user.name);
+  if (!me) return [];
+  const zones = new Set();
+  (zoneMapping || []).forEach(z => {
+    const m = String(z.zone || '').match(/ - (.+)$/);
+    if (!m || !z.salesRepName) return;
+    const rep = ownerKey(z.salesRepName);
+    if (rep.startsWith(ownerKey(m[1])) && rep === me) zones.add(z.zone);
+  });
+  return [...zones];
+}
+
+// Zones offered in the Admin Panel's user form (from the Zone Mapping tab)
+function zoneOptions() {
+  return [...new Set((zoneMapping || []).map(z => z.zone).filter(Boolean))].sort();
 }
 
 // Job-owner names are compared without the " | INZ13" code, case and extra spaces
@@ -6070,7 +6104,7 @@ function renderAddUserModal(users) {
 
       <div style="margin-bottom:18px">
         <label style="font-size:13px;font-weight:500;color:#0f172a;display:block;margin-bottom:6px">Full Name *</label>
-        <input id="newName" placeholder="e.g. Rahul Verma"
+        <input id="newName" placeholder="e.g. Rahul Verma" onchange="onNewRoleChange()"
           style="width:100%;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;color:#0f172a;outline:none;background:#f8fafc">
       </div>
 
@@ -6104,6 +6138,14 @@ function renderAddUserModal(users) {
         </div>
       </div>
 
+      <div style="margin-bottom:18px">
+        <label style="font-size:13px;font-weight:500;color:#0f172a;display:block;margin-bottom:6px">Zone <span style="font-weight:400;color:#64748b">(sees every job in this zone)</span></label>
+        <select id="newZone" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;color:#0f172a;outline:none;background:#f8fafc">
+          <option value="">None</option>
+          ${zoneOptions().map(z => `<option value="${z}">${z}</option>`).join('')}
+        </select>
+      </div>
+
       <div style="margin-bottom:24px">
         <label style="font-size:13px;font-weight:500;color:#0f172a;display:block;margin-bottom:6px">Reporting Manager</label>
         <select id="newReportingMgr"
@@ -6134,7 +6176,14 @@ function closeAddUserModal() {
   const m = document.getElementById('addUserModal');
   if (m) { m.style.display = 'none'; ['newName','newEmail','newPhone'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; }); }
 }
-function onNewRoleChange() { /* could filter reporting mgr list */ }
+function onNewRoleChange() {
+  // Zonal Manager: pre-select their zone from the Zone Mapping names
+  const role = document.getElementById('newRole')?.value || '';
+  const name = document.getElementById('newName')?.value || '';
+  const zoneSel = document.getElementById('newZone');
+  const auto = autoZonesFor({ role, name })[0];
+  if (zoneSel && auto && !zoneSel.value) zoneSel.value = auto;
+}
 
 // Refresh just the users list from the server so Add/Edit/Toggle/Delete
 // reflect instantly, instead of re-rendering the stale in-memory allUsers
@@ -6155,11 +6204,13 @@ async function saveNewUser() {
   const phone  = (document.getElementById('newPhone')?.value || '').trim();
   const active = document.getElementById('newStatus')?.value === 'true';
   const reportingManager = document.getElementById('newReportingMgr')?.value || '';
+  const zone   = document.getElementById('newZone')?.value || '';
+  const zones  = zone ? [zone] : [];
   if (!name || !email) return alert('Name and email are required.');
   await fetch(MONGO_API, { method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ action:'updateOne', collection:'users', filter:{email},
-      update:{ $set:{name,email,role,phone,active,reportingManager,updatedAt:new Date().toISOString()},
-               $setOnInsert:{zones:[],branches:[],createdAt:new Date().toISOString()} }
+      update:{ $set:{name,email,role,phone,active,reportingManager,zones,updatedAt:new Date().toISOString()},
+               $setOnInsert:{branches:[],createdAt:new Date().toISOString()} }
     })
   });
   await refreshAllUsers();
@@ -6233,6 +6284,13 @@ function openEditUser(email) {
         </select>
       </div>
     </div>
+    <div style="margin-bottom:18px">
+      <label style="font-size:13px;font-weight:500;color:#0f172a;display:block;margin-bottom:6px">Zone <span style="font-weight:400;color:#64748b">(sees every job in this zone)</span></label>
+      <select id="editZone" style="${selectStyle}">
+        <option value="">None</option>
+        ${[...new Set([...zoneOptions(), ...(u.zones || [])])].map(z => `<option value="${z}" ${((u.zones && u.zones.length ? u.zones : autoZonesFor(u))[0])===z?'selected':''}>${z}</option>`).join('')}
+      </select>
+    </div>
     <div style="margin-bottom:4px">
       <label style="font-size:13px;font-weight:500;color:#0f172a;display:block;margin-bottom:6px">Reporting Manager</label>
       <select id="editReportingMgr" style="${selectStyle}">
@@ -6257,7 +6315,8 @@ async function saveEditUser() {
   const phone  = (document.getElementById('editPhone')?.value || '').trim();
   const active = document.getElementById('editStatus').value === 'true';
   const reportingManager = document.getElementById('editReportingMgr').value;
-  const update = { name, role, phone, active, reportingManager, updatedAt: new Date().toISOString() };
+  const zone   = document.getElementById('editZone')?.value || '';
+  const update = { name, role, phone, active, reportingManager, zones: zone ? [zone] : [], updatedAt: new Date().toISOString() };
   await fetch(MONGO_API, { method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ action:'updateOne', collection:'users', filter:{email}, update:{$set:update} })
   });
