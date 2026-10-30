@@ -6246,9 +6246,13 @@ function renderEditUserModal(users) {
 }
 
 function openEditUser(email) {
+  if (!ADMIN_ROLES.includes(currentRole)) return;  // editing users is Admin-only
   const users = window._adminUsers || [];
   const u = users.find(u => u.email === email);
   if (!u) return;
+  // the edit window is built by the Admin Panel - build it here too, so the
+  // pencils on the Teams page work without opening the Admin Panel first
+  if (!document.getElementById('editUserModal')) renderEditUserModal(users);
 
   document.getElementById('editEmail').value = email;
   document.getElementById('editUserTitle').textContent = 'Edit — ' + (u.name || email);
@@ -7459,9 +7463,9 @@ function renderOrgChart() {
           <div style="font-size:11px;font-weight:600;color:${rc.color};margin-top:2px">${u.role || ''}</div>
           ${directReports.length ? `<div style="font-size:10px;color:#94a3b8;margin-top:1px">${directReports.length} direct report${directReports.length > 1 ? 's' : ''}</div>` : ''}
         </div>
-        <button onclick="openEditUser('${u.email.replace(/'/g,"\\'")}');event.stopPropagation();" 
+        ${ADMIN_ROLES.includes(currentRole) ? `<button onclick="openEditUser('${u.email.replace(/'/g,"\\'")}');event.stopPropagation();" 
           style="border:none;background:none;cursor:pointer;color:#cbd5e1;font-size:13px;padding:2px;flex-shrink:0;line-height:1"
-          title="Edit">✏️</button>
+          title="Edit">✏️</button>` : ''}
       </div>
     </div>`;
   }
