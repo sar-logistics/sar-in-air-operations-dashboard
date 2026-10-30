@@ -1451,23 +1451,6 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
             <div class="ms-trigger" onclick="toggleMs('zone-unbilled-rev')"><i class="ti ti-map-pin ms-icon"></i><span class="ms-label" id="msl-zone-unbilled-rev">All Zones</span><i class="ti ti-chevron-down ms-caret"></i></div>
             <div class="ms-dropdown" id="msd-zone-unbilled-rev"></div>
           </div>
-          <div class="add-filters-wrap" id="afw-unbilled-rev">
-            <button class="add-filters-btn" id="afb-unbilled-rev" onclick="toggleAddFilters('unbilled-rev')">
-              <i class="ti ti-adjustments-horizontal" style="font-size:13px"></i> Filters
-            </button>
-            <div class="add-filters-panel" id="afp-unbilled-rev">
-              <div class="add-filter-row">
-                <div class="add-filter-label">Operation Lock Condition</div>
-                <label style="display:flex;align-items:center;gap:9px;font-size:12px;color:var(--text2);cursor:pointer">
-                  <span class="tgl-switch">
-                    <input type="checkbox" id="chk-ur-require-ops-lock" onchange="toggleUrRequireOpsLock(this)">
-                    <span class="tgl-track"></span>
-                  </span>
-                  Require Ops Lock = Yes
-                </label>
-              </div>
-            </div>
-          </div>
         </div>
         <div class="kpi-row" style="grid-template-columns:repeat(2,minmax(0,1fr))">
           <div class="kpi blue">
@@ -1487,6 +1470,14 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
             <div class="sec-ct" id="sc-unbilled-rev">Loading…</div>
             <div style="width:1px;height:14px;background:var(--border);margin:0 2px"></div>
             <button class="ec-btn" data-state="collapsed" onclick="toggleExpandCollapse('unbilled-rev', this)" style="background:var(--accent-bg);border-color:var(--accent-border);color:var(--accent);font-weight:500"><i class="ti ti-chevrons-down" style="font-size:12px"></i> Expand All</button>
+            <label style="display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text2);cursor:pointer">
+              <span class="tgl-switch">
+                <input type="checkbox" id="chk-ur-require-ops-lock" onchange="toggleUrRequireOpsLock(this)">
+                <span class="tgl-track"></span>
+              </span>
+              Require Ops Lock
+            </label>
+            <div style="width:1px;height:14px;background:var(--border);margin:0 2px"></div>
             <label style="display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text2);cursor:pointer">
               <span class="tgl-switch">
                 <input type="checkbox" id="ub-viewmode-chk" onchange="toggleUbViewMode(this)">
@@ -1555,23 +1546,6 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
             <div class="ms-trigger" onclick="toggleMs('zone-unposted-cost')"><i class="ti ti-map-pin ms-icon"></i><span class="ms-label" id="msl-zone-unposted-cost">All Zones</span><i class="ti ti-chevron-down ms-caret"></i></div>
             <div class="ms-dropdown" id="msd-zone-unposted-cost"></div>
           </div>
-          <div class="add-filters-wrap" id="afw-unposted-cost">
-            <button class="add-filters-btn" id="afb-unposted-cost" onclick="toggleAddFilters('unposted-cost')">
-              <i class="ti ti-adjustments-horizontal" style="font-size:13px"></i> Filters
-            </button>
-            <div class="add-filters-panel" id="afp-unposted-cost">
-              <div class="add-filter-row">
-                <div class="add-filter-label">Operation Lock Condition</div>
-                <label style="display:flex;align-items:center;gap:9px;font-size:12px;color:var(--text2);cursor:pointer">
-                  <span class="tgl-switch">
-                    <input type="checkbox" id="chk-uc-require-ops-lock" checked onchange="toggleUcRequireOpsLock(this)">
-                    <span class="tgl-track"></span>
-                  </span>
-                  Require Ops Lock = Yes
-                </label>
-              </div>
-            </div>
-          </div>
         </div>
         <div class="kpi-row" style="grid-template-columns:repeat(2,minmax(0,1fr))">
           <div class="kpi blue">
@@ -1591,6 +1565,14 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
             <div class="sec-ct" id="sc-unposted-cost">Loading…</div>
             <div style="width:1px;height:14px;background:var(--border);margin:0 2px"></div>
             <button class="ec-btn" data-state="collapsed" onclick="toggleExpandCollapse('unposted-cost', this)" style="background:var(--accent-bg);border-color:var(--accent-border);color:var(--accent);font-weight:500"><i class="ti ti-chevrons-down" style="font-size:12px"></i> Expand All</button>
+            <label style="display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text2);cursor:pointer">
+              <span class="tgl-switch">
+                <input type="checkbox" id="chk-uc-require-ops-lock" checked onchange="toggleUcRequireOpsLock(this)">
+                <span class="tgl-track"></span>
+              </span>
+              Require Ops Lock
+            </label>
+            <div style="width:1px;height:14px;background:var(--border);margin:0 2px"></div>
             <label style="display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text2);cursor:pointer">
               <span class="tgl-switch">
                 <input type="checkbox" id="uc-viewmode-chk" onchange="toggleUcViewMode(this)">
