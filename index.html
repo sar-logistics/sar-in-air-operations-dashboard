@@ -1928,19 +1928,21 @@ document.addEventListener('click', e => {
 });
 
 // ── LAST UPDATED TIMESTAMP ───────────────────────────────────
+// When the data was last pushed to the database (lastSyncAt from the API),
+// not when this browser loaded it
+let dataSyncAt = null;     // ISO time of the last push, from /api/mongo-batch
 let lastDataUpdate = null;
 function markDataUpdated() {
-  lastDataUpdate = Date.now();
+  lastDataUpdate = dataSyncAt ? Date.parse(dataSyncAt) : null;
   renderLastUpdated();
 }
 function renderLastUpdated() {
-  const mins = lastDataUpdate ? Math.floor((Date.now() - lastDataUpdate) / 60000) : null;
+  // exact date and time of the last push, e.g. "Updated 29 Oct 2026, 1:47 PM"
   let text = '—';
-  if (mins !== null) {
-    if (mins < 1) text = 'Updated just now';
-    else if (mins === 1) text = 'Updated 1 min ago';
-    else if (mins < 60) text = 'Updated ' + mins + ' min ago';
-    else text = 'Updated ' + Math.floor(mins / 60) + 'h ago';
+  if (lastDataUpdate) {
+    const d = new Date(lastDataUpdate);
+    text = 'Updated ' + d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) + ', '
+         + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
   }
   const el = document.getElementById('tb-last-updated');
   if (el) el.textContent = text;
@@ -4374,12 +4376,14 @@ async function refreshData(pageId) {
     // ETD/ETA charge-line data (Unposted Cost/Unbilled Revenue) comes bundled
     // in the same batch response - no separate endpoint for USA (unlike ID/TH's /api/wip)
     rawWIP = data.etdEta || [];
+    dataSyncAt = data.lastSyncAt || dataSyncAt;
     zoneMapping = data.zoneMapping || [];
     opsMapping = data.opsMapping || [];
     applyZoneLookup();
     applyRLS();
     // keep the dates/filters the user picked - only the data is reloaded
     renderPage(pageId);
+    markDataUpdated();
   } catch(e) { console.error('Refresh error:', e); }
   finally {
     if (btn) btn.classList.remove('spinning');
@@ -5266,7 +5270,7 @@ async function loadData() {
           const s2 = r2.headers.get('X-Cache');
           if (s2 === 'HIT') {
             // Full cache ready — update data, re-render only the currently visible page
-            rawSRR = d2.records || []; rawJPA = [];
+            rawSRR = d2.records || []; rawJPA = []; dataSyncAt = d2.lastSyncAt || dataSyncAt;
             applyDirectionField(rawSRR);
             allSRR = rawSRR.filter(r => (r.direction||'').toLowerCase() === currentDirection.toLowerCase() && matchesCurrentLob(r)); allJPA = [...rawJPA];
             applyZoneLookup();
@@ -5286,7 +5290,7 @@ async function loadData() {
               });
               if (!r3.ok) return;
               const d3 = await r3.json();
-              rawSRR = d3.records || []; rawJPA = [];
+              rawSRR = d3.records || []; rawJPA = []; dataSyncAt = d3.lastSyncAt || dataSyncAt;
               applyDirectionField(rawSRR);
               allSRR = rawSRR.filter(r => (r.direction||'').toLowerCase() === currentDirection.toLowerCase() && matchesCurrentLob(r)); allJPA = [...rawJPA];
               applyZoneLookup();
@@ -5310,6 +5314,7 @@ async function loadData() {
     // ETD/ETA charge-line data (Unposted Cost/Unbilled Revenue) comes bundled
     // in the same batch response - no separate endpoint for USA (unlike ID/TH's /api/wip)
     rawWIP = data.etdEta || [];
+    dataSyncAt = data.lastSyncAt || dataSyncAt;
     console.log('[loadData] ETD/ETA records:', rawWIP.length);
     zoneMapping = data.zoneMapping || [];
     opsMapping = data.opsMapping || [];

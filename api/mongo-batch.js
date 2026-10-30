@@ -25,8 +25,14 @@ async function buildCache(db) {
   const zoneMappingDocs = await db.collection('air_ops_zone_mapping').find({}).toArray();
   const opsMappingDocs = await db.collection('air_ops_ops_mapping').find({}).toArray();
   const allDocs   = [...expDocs, ...impDocs];
+  // Every push wipes and re-inserts the records, so the newest record's
+  // creation time (from its ObjectId) is when data was last pushed
+  const newest = [...allDocs, ...etdEtaDocs].reduce((max, d) => {
+    const t = d._id && typeof d._id.getTimestamp === 'function' ? d._id.getTimestamp().getTime() : 0;
+    return t > max ? t : max;
+  }, 0);
   console.log(`[AIR-OPS] Total docs: ${allDocs.length}, users: ${userDocs.length}, etdEta: ${etdEtaDocs.length}, zoneMapping: ${zoneMappingDocs.length}, opsMapping: ${opsMappingDocs.length}`);
-  cache = { data: allDocs, users: userDocs, etdEta: etdEtaDocs, zoneMapping: zoneMappingDocs, opsMapping: opsMappingDocs, builtAt: new Date().toISOString() };
+  cache = { data: allDocs, users: userDocs, etdEta: etdEtaDocs, zoneMapping: zoneMappingDocs, opsMapping: opsMappingDocs, lastSyncAt: newest ? new Date(newest).toISOString() : null, builtAt: new Date().toISOString() };
   return cache;
 }
 
@@ -75,7 +81,7 @@ export default async function handler(req, res) {
       }
       res.setHeader('X-Cache', 'HIT');
       res.setHeader('X-Cache-Age', Math.floor((new Date() - new Date(cache.builtAt)) / 1000));
-      return res.status(200).json({ records: cache.data, users: cache.users || [], etdEta: cache.etdEta || [], zoneMapping: cache.zoneMapping || [], opsMapping: cache.opsMapping || [], builtAt: cache.builtAt });
+      return res.status(200).json({ records: cache.data, users: cache.users || [], etdEta: cache.etdEta || [], zoneMapping: cache.zoneMapping || [], opsMapping: cache.opsMapping || [], lastSyncAt: cache.lastSyncAt || null, builtAt: cache.builtAt });
     } catch (e) {
       console.error(e);
       return res.status(500).json({ error: e.message });
