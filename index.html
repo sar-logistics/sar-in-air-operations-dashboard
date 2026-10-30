@@ -5980,6 +5980,9 @@ const ROLE_GROUPS = [
 ];
 
 async function loadAdminPanel() {
+  // Users come straight from the database here - the main data feed is
+  // cached for hours, so users added elsewhere would otherwise not show
+  await refreshAllUsers();
   const users = allUsers || [];
 
   const allZones    = [...new Set(rawSRR.map(r => r.zone).filter(Boolean))].sort();
