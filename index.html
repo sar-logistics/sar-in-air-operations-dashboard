@@ -3157,9 +3157,9 @@ function fmtDate(d) {
 function initFilters(pageId) {
   const now = new Date();
 
-  // Default range: Apr 2026 (fiscal year start) -> current month, per explicit request
-  const fromYear = 2026, fromMonth = 3;
-  const toYear   = 2026, toMonth   = now.getMonth();
+  // Default range: April of the current financial year -> current month
+  const fromYear = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1, fromMonth = 3;
+  const toYear   = now.getFullYear(), toMonth = now.getMonth();
 
   const fromId = 'mp-from-' + pageId;
   const toId   = 'mp-to-' + pageId;
@@ -3398,13 +3398,50 @@ function fitTableHeight() {
 window.addEventListener('resize', fitTableHeight);
 
 function renderPage(pageId) {
+  // Every redraw rebuilds the table, so remember which rows were open and
+  // reopen them afterwards (view switch, filters, refresh, coming back)
+  const openRows = captureOpenRows(pageId);
   // ── Air Ops — 8 pages ──────────────────────────
   if (pageId === 'summary')            renderSummary();
   if (pageId === 'total-jobs')         renderTotalJobs();
   if (pageId === 'ops-lock-pendency')  renderOpsLockPendency();
   if (pageId === 'revenue-not-billed' || pageId === 'unbilled-rev') renderUnbilledRev();
   if (pageId === 'cost-not-posted'    || pageId === 'unposted-cost') renderUnpostedCost();
+  restoreOpenRows(pageId, openRows);
   requestAnimationFrame(() => requestAnimationFrame(fitTableHeight));
+}
+
+// Report table body for a page id (sidebar ids map onto the page's div id)
+function reportTbody(pageId) {
+  const divId = { 'revenue-not-billed': 'unbilled-rev', 'cost-not-posted': 'unposted-cost' }[pageId] || pageId;
+  return document.getElementById('tbody-' + divId);
+}
+// A location row's name, without the avatar initials and the chevron
+function reportRowLabel(tr) {
+  const cell = tr.querySelector('td');
+  if (!cell) return '';
+  const clone = cell.cloneNode(true);
+  clone.querySelectorAll('.av, .rc').forEach(e => e.remove());
+  return clone.textContent.trim();
+}
+function captureOpenRows(pageId) {
+  const tbody = reportTbody(pageId);
+  if (!tbody || !tbody.querySelector('.br-row')) return null;
+  const gt = tbody.querySelector('.gt-block .rc');
+  return {
+    open: new Set([...tbody.querySelectorAll('.br-row')].filter(tr => tr.querySelector('.rc.open')).map(reportRowLabel)),
+    gtClosed: !!(gt && !gt.classList.contains('open')),
+  };
+}
+function restoreOpenRows(pageId, state) {
+  const tbody = reportTbody(pageId);
+  if (!state || !tbody) return;
+  tbody.querySelectorAll('.br-row').forEach(tr => {
+    const rc = tr.querySelector('.rc');
+    if (rc && !rc.classList.contains('open') && state.open.has(reportRowLabel(tr))) toggleRows(rc.id.replace('rc-', ''));
+  });
+  const gt = tbody.querySelector('.gt-block .rc');
+  if (state.gtClosed && gt && gt.classList.contains('open')) toggleRows(gt.id.replace('rc-', ''));
 }
 
 // ── RENDER: Total Jobs Created ────────────────────────────────
@@ -4359,7 +4396,7 @@ async function refreshData(pageId) {
     opsMapping = data.opsMapping || [];
     applyZoneLookup();
     applyRLS();
-    initFilters(pageId);
+    // keep the dates/filters the user picked - only the data is reloaded
     renderPage(pageId);
   } catch(e) { console.error('Refresh error:', e); }
   finally {
