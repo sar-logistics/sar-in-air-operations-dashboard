@@ -4772,7 +4772,7 @@ function updateRateLabel() {} // no-op - no rate to show, kept so existing calls
 function fmtIndian(n) {
   const abs = Math.abs(n);
   const sign = n < 0 ? '-' : '';
-  return sign + '₹' + abs.toLocaleString('en-US', { maximumFractionDigits: 0 });
+  return sign + '₹' + abs.toLocaleString('en-IN', { maximumFractionDigits: 0 });  // Indian grouping: 1,04,72,675
 }
 
 function formatDvDate(v) {
@@ -4805,7 +4805,7 @@ function formatDvCell(r, c) {
                      c.key === 'unpostedCost';
     const color = isProfit ? (n >= 0 ? '#16a34a' : '#dc2626') : '#1d4ed8';
     if (c.plain) {
-      return `<span style="color:#1F3A6E;font-weight:500">${n.toLocaleString('en-US', { maximumFractionDigits: 2 })}</span>`;
+      return `<span style="color:#1F3A6E;font-weight:500">${n.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span>`;
     }
     if (c.full) {
       // Show full number with commas — no abbreviation
