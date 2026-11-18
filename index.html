@@ -1473,7 +1473,7 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
           <div class="kpi orange">
             <div class="kpi-top"><span class="kpi-dot orange"></span><span class="kpi-lbl">Ops Lock Pending</span></div>
             <div class="kpi-val orange" id="kv-olp-flagged">—</div>
-            <div class="kpi-sub">Ops Lock not yet set</div>
+            <div class="kpi-sub" id="kv-olp-rule">Ops Lock not yet set</div>
           </div>
           <div class="kpi red">
             <div class="kpi-top"><i class="kpi-icon-sm ti ti-percentage red"></i><span class="kpi-lbl">% of such jobs</span></div>
@@ -1632,7 +1632,7 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
           <div class="kpi orange">
             <div class="kpi-top"><span class="kpi-dot orange"></span><span class="kpi-lbl">Count of Unbilled Revenue</span></div>
             <div class="kpi-val orange" id="kv-ur-flagged">—</div>
-            <div class="kpi-sub">Unbilled Revenue ≠ 0</div>
+            <div class="kpi-sub" id="kv-ur-rule">Unbilled Revenue ≠ 0</div>
           </div>
         </div>
         <div class="sec-hd">
@@ -3731,7 +3731,26 @@ window.addEventListener('resize', fitTableHeight);
 // The page on screen (its id without the 'page-' prefix), used by the background reload
 function getActivePage() { const p = document.querySelector('.page.active'); return p ? p.id.replace(/^page-/, '') : 'summary'; }
 
+// Help lines and sidebar tooltips show the cutoff as a real date ("ETD/ETA on or before
+// 14 Nov 2026 (today − 4)") instead of "3+ days" - redrawn with every page, so it moves daily.
+function updateCutoffTexts() {
+  const RULES = [
+    // Billing Pendency: flagged when ETD/ETA is MORE than 3 days ago (etdEtaNew < today - 3)
+    { nav: 'revenue-not-billed', back: 4, tip: 'Jobs with a revenue gap between Estimated and Actual, ', sub: 'kv-ur-rule',  subText: 'Unbilled Revenue ≠ 0, ' },
+    // Ops Lock Pendency: flagged once ETD/ETA + 7 days is reached (today >= ETD/ETA + 7)
+    { nav: 'ops-lock-pendency',  back: 7, tip: 'Jobs eligible for Ops Lock closure, ', after: ', still not locked', sub: 'kv-olp-rule', subText: 'Ops Lock not yet set, ' },
+  ];
+  RULES.forEach(x => {
+    const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - x.back);
+    const txt = 'ETD/ETA on or before ' + fmtDate(d) + ' (today − ' + x.back + ')';
+    document.querySelectorAll('.nav-item[onclick*="\'' + x.nav + '\'"]').forEach(el => el.setAttribute('data-tooltip', x.tip + txt + (x.after || '')));
+    const sub = document.getElementById(x.sub); if (sub) sub.textContent = x.subText + txt;
+  });
+}
+setTimeout(updateCutoffTexts, 0);  // after the whole script has run
+
 function renderPage(pageId) {
+  updateCutoffTexts();
   // Every redraw rebuilds the table, so remember which rows were open and
   // reopen them afterwards (view switch, filters, refresh, coming back)
   const openRows = captureOpenRows(pageId);
