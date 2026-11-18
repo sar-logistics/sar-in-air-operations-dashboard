@@ -190,6 +190,7 @@ thead th{transition:box-shadow .2s}
 tr.br-row td,tr.jo-row td{transition:background-color .2s,box-shadow .2s}
 tr.br-row:hover td,tr.jo-row:hover td{background-color:#EEF4FF!important}
 tr.br-row:hover td:first-child,tr.jo-row:hover td:first-child{box-shadow:inset 3px 0 0 #2563EB}
+.tbl-wrap td:has(> span[onclick]){cursor:pointer}
 td.heat{position:relative}
 td.heat>*{position:relative}
 tr.jo-row td.heat:hover,tr.br-row td.heat:hover{box-shadow:inset 0 0 0 2px rgba(37,99,235,.35)}
@@ -373,8 +374,7 @@ body.sidebar-hidden .sidebar-reveal{opacity:1;pointer-events:all}
 @keyframes badgePop{0%{transform:scale(.5)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
 .nav-badge.pop{animation:badgePop .4s cubic-bezier(.34,1.56,.64,1)}
 .nav-badge.hidden{display:none!important}
-.nav-item.active .nav-badge:not(.hidden){display:inline-flex!important}
-#sec-summary-body .nav-item .nav-badge:not(.hidden){display:inline-flex!important}
+/* Sidebar count badges are switched off (no rule shows .nav-badge any more) */
 .nav-badge.hidden{display:none!important}
 /* Performance Metrics */
 .perf-bar-wrap{display:flex;align-items:center;gap:6px;width:100%}
@@ -878,6 +878,8 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
 .cs-wrap{position:relative;display:inline-block;width:100%}
 .cs-wrap select{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px}
 .cs-trigger{display:flex;align-items:center;justify-content:space-between;gap:6px;cursor:pointer;width:100%;transition:transform .1s}
+.cs-trigger,.cs-trigger *{white-space:nowrap}
+#tb-filter-row .cs-wrap:has(select[id^="view-"]){min-width:150px}
 .cs-trigger:active{transform:scale(.98)}
 .cs-trigger .cs-arrow{font-size:11px;color:rgba(255,255,255,.4);flex-shrink:0;transition:transform .15s}
 .cs-trigger.open .cs-arrow{transform:rotate(180deg)}
@@ -1359,8 +1361,8 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
           <span class="filter-label">Report View</span>
           <select class="filter-select" id="view-summary" onchange="onViewChange('summary')" style="min-width:150px">
             <option value="monthly">Monthly View</option>
-            <option value="weekly">Weekly View</option>
             <option value="fortnightly">Fortnightly View</option>
+            <option value="weekly">Weekly View</option>
             <option value="quarterly">Quarterly View</option>
             <option value="yearly">Yearly View</option>
             <option value="custom">Custom Range</option>
@@ -1416,8 +1418,8 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
           <span class="filter-label">Report View</span>
           <select class="filter-select" id="view-ops-lock-pendency" onchange="onViewChange('ops-lock-pendency')">
             <option value="monthly">Monthly View</option>
-            <option value="weekly">Weekly View</option>
             <option value="fortnightly">Fortnightly View</option>
+            <option value="weekly">Weekly View</option>
             <option value="quarterly">Quarterly View</option>
             <option value="yearly">Yearly View</option>
             <option value="custom">Custom Range</option>
@@ -1505,8 +1507,8 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
           <span class="filter-label">Report View</span>
           <select class="filter-select" id="view-total-jobs" onchange="onViewChange('total-jobs')">
             <option value="monthly">Monthly View</option>
-            <option value="weekly">Weekly View</option>
             <option value="fortnightly">Fortnightly View</option>
+            <option value="weekly">Weekly View</option>
             <option value="quarterly">Quarterly View</option>
             <option value="yearly">Yearly View</option>
             <option value="custom">Custom Range</option>
@@ -1576,8 +1578,8 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
           <span class="filter-label">Report View</span>
           <select class="filter-select" id="view-unbilled-rev" onchange="onViewChange('unbilled-rev')">
             <option value="monthly">Monthly View</option>
-            <option value="weekly">Weekly View</option>
             <option value="fortnightly">Fortnightly View</option>
+            <option value="weekly">Weekly View</option>
             <option value="quarterly">Quarterly View</option>
             <option value="yearly">Yearly View</option>
             <option value="custom">Custom Range</option>
@@ -1672,8 +1674,8 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
           <span class="filter-label">Report View</span>
           <select class="filter-select" id="view-unposted-cost" onchange="onViewChange('unposted-cost')">
             <option value="monthly">Monthly View</option>
-            <option value="weekly">Weekly View</option>
             <option value="fortnightly">Fortnightly View</option>
+            <option value="weekly">Weekly View</option>
             <option value="quarterly">Quarterly View</option>
             <option value="yearly">Yearly View</option>
             <option value="custom">Custom Range</option>
@@ -1802,6 +1804,7 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
                 style="width:100%;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:8px;padding:7px 12px 7px 32px;font-size:13px;color:#0f172a;outline:none;background:#fff">
             </div>
             <span id="usageCount" style="font-size:13px;color:#64748b"></span>
+            <button onclick="loadUsageAnalytics(true)" title="Reload usage" style="display:inline-flex;align-items:center;gap:6px;border:1px solid #e2e8f0;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:500;color:#0f172a;background:#fff;cursor:pointer">↻ Refresh</button>
             <button onclick="exportUsageToExcel()" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;border:1px solid #16a34a;background:#f0fdf4;color:#16a34a;font-size:13px;font-weight:600;cursor:pointer">
               <i class="ti ti-file-spreadsheet" style="font-size:14px"></i> Export to Excel
             </button>
@@ -1840,7 +1843,7 @@ tr:hover td:first-child,tr:hover td.col-grand{background:#f8fbff}
                 style="width:100%;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px 8px 34px;font-size:13px;color:#0f172a;outline:none;background:#fff">
             </div>
             <span id="feedbackCount" style="font-size:12.5px;color:#64748b;font-weight:500"></span>
-            <button onclick="loadFeedback()" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;color:#0f172a;font-size:13px;font-weight:600;cursor:pointer">
+            <button onclick="loadFeedback(true)" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;color:#0f172a;font-size:13px;font-weight:600;cursor:pointer">
               <i class="ti ti-refresh" style="font-size:14px"></i> Refresh
             </button>
           </div>
@@ -1963,7 +1966,9 @@ const BATCH_API = '/api/mongo-batch';
 const WIP_API   = '/api/wip';
 
 // ── PRE-CALCULATE MAIN METRICS BADGES ───────────────────────
-function updateMainMetricsBadges() {
+// skipPage: the page that is about to be drawn properly by renderPage() - redrawing it here
+// first would drop its heat-map shading and collapse the rows the user had open
+function updateMainMetricsBadges(skipPage) {
   const j = allJPA || [];
   const s = allSRR || [];
   if (!j.length && !s.length) return;
@@ -2737,10 +2742,29 @@ document.addEventListener('click', e => {
   }, {passive: true});
 })();
 
+// Google's renderButton() replaces #signinBtn, so it can already be gone when an
+// error path tries to show it again - skip it instead of throwing.
+function setSigninBtnDisplay(v) { const b = document.getElementById('signinBtn'); if (b) b.style.display = v; }
+
+// One click to sign in: show Google's own button as soon as its library has loaded,
+// instead of a placeholder button that only swapped itself for Google's button.
+function autoRenderGoogleButton(tries) {
+  tries = tries || 0;
+  if (currentUser) return;
+  const page = document.getElementById('signInPage');
+  if (!page || getComputedStyle(page).display === 'none') return;
+  if (window.google && google.accounts && google.accounts.id) {
+    if (document.getElementById('signinBtn')) handleAuth();
+    return;
+  }
+  if (tries < 60) setTimeout(() => autoRenderGoogleButton(tries + 1), 250);
+}
+setTimeout(autoRenderGoogleButton, 0);
+
 function handleAuth() {
   document.getElementById('signinLoading').style.display = 'block';
   document.getElementById('signinError').style.display = 'none';
-  document.getElementById('signinBtn').style.display = 'none';
+  setSigninBtnDisplay('none');
 
   google.accounts.id.initialize({
     client_id: CLIENT_ID,
@@ -2772,7 +2796,8 @@ function handleAuth() {
   );
 }
 
-async function verifyUser(info) {
+async function verifyUser(info, opts) {
+  opts = opts || {};
   try {
     const email = (info.email || '').toLowerCase().trim();
     const resp = await fetch(MONGO_API, {
@@ -2784,11 +2809,13 @@ async function verifyUser(info) {
     const user = data.document;
 
     if (!user) {
+      clearSession();
       showSigninError('Access denied. ' + email + ' is not authorised. Contact your administrator.');
       const sb = document.getElementById('signinBtn'); if (sb) sb.style.display = 'flex';
       return;
     }
 
+    saveSession({ email, name: info.name || user.name, picture: info.picture }, !!opts.restoring);
     currentUser    = { email, name: info.name || user.name, picture: info.picture };
     currentRole    = user.role || 'Viewer';
     currentUserDoc = user;
@@ -2829,6 +2856,44 @@ function showSigninError(msg) {
   err.style.display = 'block';
 }
 
+// ── SIGN-IN SESSION ──────────────────────────────────────────
+// The signed-in user is remembered in this browser for 12 hours (or until they sign out),
+// so a reload no longer logs them out. On every load verifyUser() checks the account in the
+// database again: a user who was removed or made inactive is sent back to the sign-in page.
+const SESSION_KEY = 'sar_air_ops_session';
+function saveSession(info, keepExpiry) {
+  try {
+    const old = loadSession();
+    const exp = keepExpiry && old ? old.exp : Date.now() + SESSION_DURATION;
+    localStorage.setItem(SESSION_KEY, JSON.stringify({ email: info.email, name: info.name, picture: info.picture, exp }));
+  } catch (e) {}
+}
+function loadSession() {
+  try {
+    const v = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
+    return v && v.email && v.exp > Date.now() ? v : null;
+  } catch (e) { return null; }
+}
+function clearSession() { try { localStorage.removeItem(SESSION_KEY); } catch (e) {} }
+function sessionLeftMs() { const v = loadSession(); return v ? v.exp - Date.now() : SESSION_DURATION; }
+
+// Restore a remembered session on page load (not for a Hub sign-in, which brings its own user)
+(function restoreSession() {
+  let hub = null; try { hub = sessionStorage.getItem('sar_hub_sso_user'); } catch (e) {}
+  if (hub) return;
+  const sess = loadSession();
+  if (!sess) return;
+  const box = document.getElementById('googleBtnContainer');
+  document.getElementById('signinLoading').style.display = 'block';
+  if (box) box.style.visibility = 'hidden';
+  // after the whole script has run (values further down must exist first)
+  setTimeout(async () => {
+    try {
+      if (!currentUser) await verifyUser({ email: sess.email, name: sess.name, picture: sess.picture }, { restoring: true });
+    } finally { if (box) box.style.visibility = ''; }
+  }, 0);
+})();
+
 // ── SSO HANDOFF (SAR Systems Hub) ────────────────────────────
 // Only runs when /api/sso-verify has just written this key to sessionStorage.
 // A user who signs in directly (typing this dashboard's URL) never has this
@@ -2851,6 +2916,7 @@ function showSigninError(msg) {
     currentUser    = { email, name: user.name || email, picture: user.picture };
     currentRole    = user.role || 'Viewer';
     currentUserDoc = user;
+    saveSession(currentUser);
 
     document.getElementById('signInPage').style.display = 'none';
     document.getElementById('appShell').style.display = 'flex';
@@ -2868,13 +2934,14 @@ function showSigninError(msg) {
 })();
 
 function signOut() {
-  google.accounts.id.disableAutoSelect();
+  clearSession();
+  try { google.accounts.id.disableAutoSelect(); } catch (e) {}
   currentUser = null; currentRole = null; allSRR = [];
   document.getElementById('appShell').style.display = 'none';
   document.getElementById('signInPage').style.display = 'flex';
   document.getElementById('signinLoading').style.display = 'none';
   document.getElementById('signinError').style.display = 'none';
-  document.getElementById('signinBtn').style.display = 'flex';
+  setSigninBtnDisplay('flex');
   document.getElementById('googleBtnContainer').innerHTML =
     `<button class="signin-btn" id="signinBtn" onclick="handleAuth()">
       <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px">
@@ -2885,6 +2952,7 @@ function signOut() {
       </svg>
       Continue with Google
     </button>`;
+  setTimeout(autoRenderGoogleButton, 0);
 }
 
 // ── SIDEBAR ──────────────────────────────────────────────────
@@ -2968,9 +3036,17 @@ function setPage(pageId, title, group, el) {
   document.querySelectorAll('.nav-item,.sys-item,.reports-label').forEach(n => n.classList.remove('active'));
   if (el) el.classList.add('active');
   clearSidebarSearch();
-  // Keep System section expanded when a sys-item is active
+  // System section opens on hover only (it used to stay open after visiting a System page)
   const sysSection = document.querySelector('.sys-section');
-  if (sysSection) sysSection.classList.toggle('expanded', group === 'System');
+  if (sysSection) sysSection.classList.remove('expanded');
+  // On the home screen (no Sea Export / Import picked yet) every page is hidden behind the
+  // home illustration, so a System page switched invisibly and looked unclickable: show it
+  if (group === 'System') {
+    const home = document.getElementById('sk-lob-placeholder');
+    const pg = document.getElementById('page-' + pageId);
+    if (pg && pg.style.display === 'none') pg.style.display = '';   // the .active class shows it
+    if (home) home.classList.remove('visible', 'fading-out');
+  }
 
   // Move active filter bar to topbar — restore previous one first
   const filterRow = document.getElementById('tb-filter-row');
@@ -3349,7 +3425,10 @@ function getDateRange(pageId) {
     const fromState = pickerState['dp-cfrom-' + pageId];
     const toState   = pickerState['dp-cto-' + pageId];
     if (fromState && fromState.selected && toState && toState.selected) {
-      const fs = fromState.selected, ts = toState.selected;
+      let fs = fromState.selected, ts = toState.selected;
+      // From picked after To: use them the other way round (Monthly already does this) -
+      // otherwise the page showed "No jobs" / "All clear!" for a range that has data
+      if (new Date(fs.year, fs.month, fs.day) > new Date(ts.year, ts.month, ts.day)) { const t = fs; fs = ts; ts = t; }
       from  = new Date(fs.year, fs.month, fs.day);
       to    = new Date(ts.year, ts.month, ts.day, 23, 59, 59);
       label = fs.day + ' ' + MONTHS[fs.month] + ' ' + fs.year + ' → ' + ts.day + ' ' + MONTHS[ts.month] + ' ' + ts.year;
@@ -3403,8 +3482,16 @@ function initFilters(pageId) {
 function showScorecards(view) { return view !== 'yearly' && view !== 'quarterly'; }
 function showGrandTotal(view)  { return view !== 'yearly' && view !== 'quarterly'; }
 
+// Quarterly view spans every year (one column per year for the picked quarter), so jobs must
+// also be in that quarter - otherwise totals and badges counted all quarters
+function selectedQuarter(pageId, view) {
+  return view === 'quarterly' ? Number((document.getElementById('quarter-' + pageId) || {}).value || 1) : 0;
+}
+function quarterOf(d) { const mo = d.getMonth(); return mo >= 3 && mo <= 5 ? 1 : mo >= 6 && mo <= 8 ? 2 : mo >= 9 && mo <= 11 ? 3 : 4; }
+
 function filterByDate(data, pageId) {
-  const { from, to } = getDateRange(pageId);
+  const { from, to, view } = getDateRange(pageId);
+  const q = selectedQuarter(pageId, view);
   return data.filter(r => {
     let d;
     if (r.chargeType !== undefined) {
@@ -3423,7 +3510,7 @@ function filterByDate(data, pageId) {
       const raw = r.direction === 'Import' ? (r.destinationEta || r.originEtd) : (r.originEtd || r.etdDate);
       d = raw ? new Date(raw) : null;
     }
-    return d && d >= from && d <= to;
+    return d && d >= from && d <= to && (!q || quarterOf(d) === q);
   });
 }
 
@@ -3553,10 +3640,11 @@ function avInitials(name) {
   return (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
 }
 function filterByDateJPA(data, pageId) {
-  const { from, to } = getDateRange(pageId);
+  const { from, to, view } = getDateRange(pageId);
+  const q = selectedQuarter(pageId, view);
   return data.filter(r => {
     const d = r.jobDate ? new Date(r.jobDate) : null;
-    return d && d >= from && d <= to;
+    return d && d >= from && d <= to && (!q || quarterOf(d) === q);
   });
 }
 
@@ -3640,6 +3728,9 @@ function fitTableHeight() {
 }
 window.addEventListener('resize', fitTableHeight);
 
+// The page on screen (its id without the 'page-' prefix), used by the background reload
+function getActivePage() { const p = document.querySelector('.page.active'); return p ? p.id.replace(/^page-/, '') : 'summary'; }
+
 function renderPage(pageId) {
   // Every redraw rebuilds the table, so remember which rows were open and
   // reopen them afterwards (view switch, filters, refresh, coming back)
@@ -3705,6 +3796,15 @@ function updateSky() {
   el.title = { dawn: 'Good morning', day: 'Good day', dusk: 'Good evening', night: 'Good night' }[mode];
 }
 updateSky(); setInterval(updateSky, 5 * 60 * 1000);
+
+// Report tables: a click anywhere in a number cell opens its drill-down, not only on the
+// number itself (the cell already shows a pointer; only the number was clickable)
+document.addEventListener('click', e => {
+  if (e.target.closest('[onclick]')) return;            // the number (or a clickable cell) handled it
+  const td = e.target.closest('.tbl-wrap td');
+  const num = td && td.querySelector(':scope > span[onclick]');
+  if (num) num.click();
+});
 
 // Thin glowing bar along the top while data loads or refreshes
 let _progT = null, _progN = 0;
@@ -4821,6 +4921,9 @@ function populateFilters(pageId, data) {
   if (_suppressPopulateFilters) return;  // don't rebuild dropdowns during checkbox interactions
   const branches = [...new Set(data.map(r => r.jobBranch || r.branch || r.location).filter(Boolean))].sort();
   const owners   = [...new Set(data.map(r => r.jobOwner).filter(Boolean))].sort();
+  // Jobs with no Branch / Job Owner get their own option, so unticking one name no longer hides them as well
+  if (data.some(r => !(r.jobBranch || r.branch || r.location)))   branches.push('(No Branch)');
+  if (data.some(r => !r.jobOwner)) owners.push('(Unknown)');
   const zones    = [...new Set(data.map(r => r.zone).filter(Boolean))].sort();
 
   buildMsDropdown('branch-' + pageId, branches);
@@ -4843,8 +4946,8 @@ function applyDropdownFilters(data, pageId) {
   if (zoneState   === null) return [];
 
   return data.filter(r => {
-    if (!branchAll && !branchState.has(r.jobBranch || r.branch || r.location || '')) return false;
-    if (!ownerAll  && !ownerState.has(r.jobOwner || '')) return false;
+    if (!branchAll && !branchState.has(r.jobBranch || r.branch || r.location || '(No Branch)')) return false;
+    if (!ownerAll  && !ownerState.has(r.jobOwner || '(Unknown)')) return false;
     if (!zoneAll   && !zoneState.has(r.zone || '')) return false;
     return true;
   });
@@ -4863,7 +4966,9 @@ async function refreshData(pageId) {
   progressStart();
   try {
     const resp = await fetch(BATCH_API + '?t=' + Date.now() + '&forceRefresh=1', { method:'GET', headers:{'Cache-Control':'no-cache, no-store'} });
-    const data = await resp.json();
+    const data = await resp.json().catch(() => null);
+    // A server error must not wipe the page (it showed "All clear!" / 0 jobs): keep the old data
+    if (!resp.ok || !data || !Array.isArray(data.records)) throw new Error('refresh failed: HTTP ' + resp.status + (data && data.error ? ' - ' + data.error : ''));
     rawSRR    = data.records    || [];
     applyDirectionField(rawSRR);
     updateRateLabel();
@@ -4883,7 +4988,7 @@ async function refreshData(pageId) {
     renderPage(pageId);
     markDataUpdated();
     showToast('Data refreshed', rawSRR.length.toLocaleString() + ' jobs');
-  } catch(e) { console.error('Refresh error:', e); showToast('Refresh failed - try again'); }
+  } catch(e) { console.error('Refresh error:', e); showToast('Refresh failed - showing the last loaded data. Try again in a minute.'); }
   finally {
     if (btn) btn.classList.remove('spinning');
     progressDone();
@@ -5576,8 +5681,9 @@ function populateDvFilter(key, dd) {
       ${allVals.map(v => {
         // dataVal: safe for a double-quoted HTML attribute (only " needs escaping)
         const dataVal = v.replace(/"/g, '&quot;');
-        // jsVal: safe for embedding inside a single-quoted JS string literal
-        const jsVal = v.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        // jsVal: safe inside a single-quoted JS string literal that itself sits in a
+        // double-quoted onchange="" attribute - so " must become &quot; too (it broke the filter)
+        const jsVal = v.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r?\n/g, '\\n').replace(/"/g, '&quot;');
         const checked = isAll || (sel instanceof Set && sel.has(v));
         return `<label class="dv-col-dd-item" data-val="${dataVal}">
           <input type="checkbox" ${checked ? 'checked' : ''} onchange="dvFilterToggle(event,'${key}','${jsVal}')"> ${v}
@@ -5622,7 +5728,10 @@ function renderDvBody() {
   // via specificity.
   tbody.innerHTML = dvFiltered.map((r, i) => {
     const prev = dvFiltered[i - 1];
-    const isNewShipment = !prev || r.shipmentId !== prev.shipmentId;
+    // Sorted by another column a shipment's lines are no longer next to each other,
+    // so the separators would be noise - show them only in the natural order
+    const sortedAway = dvSort && dvSort.key && dvSort.key !== 'shipmentId' && dvSort.key !== 'jobNo';
+    const isNewShipment = !sortedAway && (!prev || r.shipmentId !== prev.shipmentId);
     const extraBorder = isNewShipment ? 'border-top:1px dashed #94a3b8;' : '';
     return `<tr>${dvCols.map(c => {
       const align = (c.num || c.pct) ? 'text-align:right;' : '';
@@ -5774,15 +5883,15 @@ async function loadData() {
           if (!r2.ok) return;
           const d2 = await r2.json();
           const s2 = r2.headers.get('X-Cache');
-          if (s2 === 'HIT') {
+          if (s2 === 'HIT' && Array.isArray(d2.records)) {
             // Full cache ready — update data, re-render only the currently visible page
             rawSRR = d2.records || []; rawJPA = []; dataSyncAt = d2.lastSyncAt || dataSyncAt;
             applyDirectionField(rawSRR);
             allSRR = rawSRR.filter(r => (r.direction||'').toLowerCase() === currentDirection.toLowerCase() && matchesCurrentLob(r)); allJPA = [...rawJPA];
             applyZoneLookup();
             applyRLS();
+            updateMainMetricsBadges(getActivePage());  // other pages first, then the visible page (shading + open rows kept)
             try { renderPage(getActivePage()); } catch(e) {}
-            updateMainMetricsBadges();
             markDataUpdated();
             console.log('[loadData] Silent re-fetch complete — SRR:', rawSRR.length);
           } else {
@@ -5796,13 +5905,14 @@ async function loadData() {
               });
               if (!r3.ok) return;
               const d3 = await r3.json();
+              if (!Array.isArray(d3.records)) return;  // keep what is on screen
               rawSRR = d3.records || []; rawJPA = []; dataSyncAt = d3.lastSyncAt || dataSyncAt;
               applyDirectionField(rawSRR);
               allSRR = rawSRR.filter(r => (r.direction||'').toLowerCase() === currentDirection.toLowerCase() && matchesCurrentLob(r)); allJPA = [...rawJPA];
               applyZoneLookup();
               applyRLS();
+              updateMainMetricsBadges(getActivePage());
               try { renderPage(getActivePage()); } catch(e) {}
-              updateMainMetricsBadges();
             markDataUpdated();
               console.log('[loadData] Final re-fetch — SRR:', rawSRR.length);
             }, 30000);
@@ -5948,7 +6058,8 @@ async function submitFeedback() {
 // ── FEEDBACK PAGE (Admin only) ─────────────────────────────────
 let _feedbackRows = [];
 
-async function loadFeedback() {
+async function loadFeedback(force) {
+  if (!force && window._feedbackLoaded) return;
   const tbody = document.getElementById('feedbackTbody');
   const countEl = document.getElementById('feedbackCount');
   if (!tbody) return;
@@ -5960,6 +6071,7 @@ async function loadFeedback() {
     const data = await resp.json();
     const rows = (data.documents || []).sort((a,b) => (b.timestamp||'').localeCompare(a.timestamp||''));
     _feedbackRows = rows;
+    window._feedbackLoaded = true;
 
     if (!rows.length) {
       tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:48px;color:#94a3b8">No tickets submitted yet.</td></tr>';
@@ -6109,8 +6221,10 @@ let _logoutWarningTimer = null;
 function startSessionTimer() {
   clearTimeout(_sessionTimer);
   clearTimeout(_logoutWarningTimer);
-  _logoutWarningTimer = setTimeout(() => { showLogoutWarning(); }, SESSION_DURATION - LOGOUT_WARNING);
-  _sessionTimer       = setTimeout(() => { hideLogoutWarning(); signOut(); }, SESSION_DURATION);
+  const left = sessionLeftMs();   // a restored session keeps its original 12-hour end
+  if (left <= 0) { signOut(); return; }
+  _logoutWarningTimer = setTimeout(() => { showLogoutWarning(); }, Math.max(0, left - LOGOUT_WARNING));
+  _sessionTimer       = setTimeout(() => { hideLogoutWarning(); signOut(); }, left);
 }
 
 function showLogoutWarning() {
@@ -6140,6 +6254,7 @@ function hideLogoutWarning() {
 
 function extendSession() {
   hideLogoutWarning();
+  if (currentUser) saveSession(currentUser);  // a fresh 12 hours
   startSessionTimer();
 }
 
@@ -6274,7 +6389,8 @@ function logUsage(report) {
 // ── USAGE ANALYTICS ──────────────────────────────────────────
 let _usageRows = []; // full dataset for filtering
 
-async function loadUsageAnalytics() {
+async function loadUsageAnalytics(force) {
+  if (!force && window._usageLoaded) return;
   _usageSort = { key: null, dir: 1 };
   _usageFilteredRows = null;
   document.querySelectorAll('[id^="usort-"]').forEach(el => {
@@ -6300,6 +6416,7 @@ async function loadUsageAnalytics() {
 
     const logs  = logsData.documents  || [];
     const users = usersData.documents || [];
+    window._usageLoaded = true;
 
     // Aggregate: per user email → { loginCount, lastLogin }
     const loginMap = {};
@@ -6509,7 +6626,10 @@ const ROLE_GROUPS = [
   { label: 'DOC USER',           roles: ['Doc User','doc user'] },
 ];
 
-async function loadAdminPanel() {
+// System pages load once per session; force = reload (Refresh button, or after users change)
+async function loadAdminPanel(force) {
+  if (!force && window._adminLoaded) return;
+  if (force) { window._teamsRendered = false; window._usageLoaded = false; }  // they show users too
   // Users come straight from the database here - the main data feed is
   // cached for hours, so users added elsewhere would otherwise not show
   await refreshAllUsers();
@@ -6538,6 +6658,9 @@ async function loadAdminPanel() {
       <button onclick="openImportModal()" style="display:inline-flex;align-items:center;gap:6px;border:1px solid #e2e8f0;border-radius:8px;padding:7px 16px;font-size:13px;font-weight:500;color:#0f172a;background:#fff;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.07)">
         ⬆ Import CSV
       </button>
+      <button onclick="loadAdminPanel(true)" title="Reload users" style="display:inline-flex;align-items:center;gap:6px;border:1px solid #e2e8f0;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:500;color:#0f172a;background:#fff;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.07)">
+        ↻ Refresh
+      </button>
       <div style="position:relative;flex:1;max-width:360px">
         <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:13px">🔍</span>
         <input id="adminSearch" placeholder="Search by name, email or role…" oninput="adminFilter(this.value)"
@@ -6565,6 +6688,7 @@ async function loadAdminPanel() {
   h += `</div>`;
 
   document.getElementById('adminContent').innerHTML = h;
+  window._adminLoaded = true;
   renderAddUserModal(users);
   renderEditUserModal(users);
 }
@@ -6748,7 +6872,7 @@ async function saveNewUser() {
   });
   await refreshAllUsers();
   closeAddUserModal();
-  loadAdminPanel();
+  loadAdminPanel(true);
 }
 
 // ── EDIT USER MODAL ───────────────────────────────────────────
@@ -6859,7 +6983,7 @@ async function saveEditUser() {
   });
   await refreshAllUsers();
   closeEditUser();
-  loadAdminPanel();
+  loadAdminPanel(true);
 }
 
 async function toggleActive(email, active) {
@@ -6867,7 +6991,7 @@ async function toggleActive(email, active) {
     body: JSON.stringify({ action:'updateOne', collection:'users', filter:{email}, update:{$set:{active}} })
   });
   await refreshAllUsers();
-  loadAdminPanel();
+  loadAdminPanel(true);
 }
 
 async function confirmDeleteUser(email) {
@@ -6876,7 +7000,7 @@ async function confirmDeleteUser(email) {
     body: JSON.stringify({ action:'deleteOne', collection:'users', filter:{email} })
   });
   await refreshAllUsers();
-  loadAdminPanel();
+  loadAdminPanel(true);
 }
 
 // ── SUMMARY PAGE ─────────────────────────────────────────────
@@ -7118,7 +7242,7 @@ function renderSummary() {
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
           <div style="font-size:13px;font-weight:800;color:#0f1f2e;letter-spacing:.02em">CHECKPOINT LOG</div>
           <button onclick="toggleSumSort()" title="Toggle sort order" style="font-size:11px;font-weight:700;padding:5px 11px;border:1px solid var(--border);border-radius:var(--r-sm);background:#fff;color:var(--accent);cursor:pointer;box-shadow:var(--shadow-sm);display:flex;align-items:center;gap:4px;transition:background .15s ease,box-shadow .15s ease">
-            <span>${window._sumSort==="high"?"↓ Highest":"↑ Lowest"}</span>
+            <span>${(window._sumSort || 'high')==="high"?"↓ Highest":"↑ Lowest"}</span>
           </button>
         </div>
         <div style="font-size:11px;color:#6a8aaa;margin-bottom:10px">All ${SUMMARY_REPORTS.length} checkpoints · click any row for monthly detail</div>
@@ -7844,14 +7968,16 @@ async function saveImportedUsers() {
   // Show success briefly then close and reload
   setTimeout(() => {
     closeImportModal();
-    loadAdminPanel();
+    loadAdminPanel(true);
   }, 1200);
 }
 
 // ── TEAMS ORG CHART ──────────────────────────────────────────
-function renderTeams() {
-  // Make sure admin users are loaded
-  if (window._adminUsers && window._adminUsers.length) {
+function renderTeams(force) {
+  if (!force && window._teamsRendered) return;
+  window._teamsRendered = true;
+  // Make sure admin users are loaded (Refresh reloads them)
+  if (!force && window._adminUsers && window._adminUsers.length) {
     _doRenderTeams();
   } else {
     // Load users first, then render
@@ -7878,7 +8004,7 @@ function _doRenderTeams() {
     <div style="padding:14px 20px 20px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
         <span style="font-size:11px;font-weight:700;color:#64748b;letter-spacing:.08em">👥 TEAMS</span>
-        <button class="ec-btn" onclick="renderTeams()" title="Refresh" style="display:inline-flex;align-items:center;gap:5px">
+        <button class="ec-btn" onclick="renderTeams(true)" title="Refresh" style="display:inline-flex;align-items:center;gap:5px">
           <i class="ti ti-refresh" style="font-size:12px"></i> Refresh
         </button>
       </div>
