@@ -3735,8 +3735,8 @@ function getActivePage() { const p = document.querySelector('.page.active'); ret
 // 14 Nov 2026 (today − 4)") instead of "3+ days" - redrawn with every page, so it moves daily.
 function updateCutoffTexts() {
   const RULES = [
-    // Billing Pendency: flagged when ETD/ETA is MORE than 3 days ago (etdEtaNew < today - 3)
-    { nav: 'revenue-not-billed', back: 4, tip: 'Jobs with a revenue gap between Estimated and Actual, ', sub: 'kv-ur-rule',  subText: 'Unbilled Revenue ≠ 0, ' },
+    // Billing Pendency: flagged when ETD/ETA is on or before yesterday (etdEtaNew < today)
+    { nav: 'revenue-not-billed', back: 1, tip: 'Jobs with a revenue gap between Estimated and Actual, ', sub: 'kv-ur-rule',  subText: 'Unbilled Revenue ≠ 0, ' },
     // Ops Lock Pendency: flagged once ETD/ETA + 7 days is reached (today >= ETD/ETA + 7)
     { nav: 'ops-lock-pendency',  back: 7, tip: 'Jobs eligible for Ops Lock closure, ', after: ', still not locked', sub: 'kv-olp-rule', subText: 'Ops Lock not yet set, ' },
   ];
@@ -4534,13 +4534,15 @@ function _renderEtdEtaFlagged(pageId, s, flagLabel, sumField, colSetName, colSet
   // Yes AND cost still pending" - not just cost pending alone. requireOpsLock
   // adds that condition; Billing Pendency doesn't pass it, so it's unaffected
   const isOpsLocked = sh => sh.operationLockDate && String(sh.operationLockDate).trim() !== '';
-  // Billing Pendency: ETD/ETA + cutoffDays (Today - cutoffDays) - sh.etdEtaNew
+  // Billing Pendency: ETD/ETA before (today - cutoffDays). cutoffDays = 0 since 18-Nov: every job
+  // with ETD/ETA on or before YESTERDAY is flagged (on the 18th the 17th's jobs show too).
+  // sh.etdEtaNew
   // is already direction-aware at the data level (derived on the sheet as
   // ETD for Export rows, ETA for Import rows), so the same check here
-  // automatically applies ETD+3 for Export and ETA+3 for Import with no
+  // automatically applies the cutoff to ETD for Export and ETA for Import with no
   // branching needed. Pages that don't pass cutoffDays are unaffected.
   const isPastCutoff = sh => {
-    if (!cutoffDays) return true;
+    if (cutoffDays == null) return true;  // 0 is a real cutoff (ETD/ETA before today)
     const d = sh.etdEtaNew ? new Date(sh.etdEtaNew) : null;
     if (!d || isNaN(d)) return false;
     const cutoff = new Date(); cutoff.setHours(0,0,0,0); cutoff.setDate(cutoff.getDate() - cutoffDays);
@@ -4678,7 +4680,7 @@ function _renderEtdEtaFlagged(pageId, s, flagLabel, sumField, colSetName, colSet
 }
 
 function renderUnbilledRev() {
-  _renderEtdEtaFlagged('unbilled-rev', 'ur', 'Unbilled Revenue', 'unbilledRevenue', 'DV_COLS_WIP_REVENUE', DV_COLS_WIP_REVENUE, urRequireOpsLock, 3);
+  _renderEtdEtaFlagged('unbilled-rev', 'ur', 'Unbilled Revenue', 'unbilledRevenue', 'DV_COLS_WIP_REVENUE', DV_COLS_WIP_REVENUE, urRequireOpsLock, 0);
 }
 
 function renderUnpostedCost() {
@@ -5852,6 +5854,18 @@ function applyDirectionField(arr) {
 // else its location against the mapping's Location rows. Unmatched records
 // get zone = 'Cross Sales' rather than being dropped, so they're still
 // visible/filterable instead of silently disappearing.
+// A zone is identified by its code ("INAZ01"); the name after it ("(Enterprises) - Radha") is
+// whatever the Zone Mapping tab says NOW. Job rows, ETD/ETA lines and saved users can still carry
+// an older name (the sheet's Zone column is written once per row), so everything is shown and
+// matched under the current Zone Mapping name of its code.
+function zoneCode(z) { const m = String(z || '').trim().match(/^([A-Z]+\d+[A-Z]?)\b/i); return m ? m[1].toUpperCase() : ''; }
+function currentZoneName(z) {
+  const code = zoneCode(z);
+  if (!code) return z;
+  const hit = (zoneMapping || []).find(m => zoneCode(m.zone) === code);
+  return hit ? hit.zone : z;
+}
+
 function applyZoneLookup() {
   const byRep = {}, byLocation = {};
   (zoneMapping || []).forEach(z => {
@@ -5869,6 +5883,13 @@ function applyZoneLookup() {
         || 'Cross Sales';
     });
   });
+  // rows written under an older zone name (e.g. "- Niranjan") show the current one ("- Radha")
+  const names = {};
+  [rawSRR, rawWIP].forEach(arr => (arr || []).forEach(r => {
+    if (!r.zone) return;
+    if (!(r.zone in names)) names[r.zone] = currentZoneName(r.zone);
+    r.zone = names[r.zone];
+  }));
   console.log('[applyZoneLookup] mapping:', Object.keys(byRep).length, 'reps,', Object.keys(byLocation).length, 'locations | SRR zoned:', (rawSRR||[]).length, '| ETD/ETA zoned:', (rawWIP||[]).length);
 }
 
@@ -6305,7 +6326,7 @@ function applyRLS() {
   // Zone(s) set on this user's own record in the Admin Panel (not inherited
   // from a manager) - e.g. a Zonal Manager sees every job in their zone
   const me = (allUsers || []).find(u => (u.email || '').toLowerCase().trim() === email);
-  rlsZones = new Set(me && me.zones && me.zones.length ? me.zones : autoZonesFor(me));
+  rlsZones = new Set((me && me.zones && me.zones.length ? me.zones : autoZonesFor(me)).map(currentZoneName));
 
   allSRR = rawSRR.filter(r => rlsAllows(r) && (r.direction||'').toLowerCase() === currentDirection.toLowerCase() && matchesCurrentLob(r));
   allJPA = rawJPA.filter(rlsAllows);
@@ -6968,7 +6989,7 @@ function openEditUser(email) {
       <label style="font-size:13px;font-weight:500;color:#0f172a;display:block;margin-bottom:6px">Zone <span style="font-weight:400;color:#64748b">(sees every job in this zone)</span></label>
       <select id="editZone" style="${selectStyle}">
         <option value="">None</option>
-        ${[...new Set([...zoneOptions(), ...(u.zones || [])])].map(z => `<option value="${z}" ${((u.zones && u.zones.length ? u.zones : autoZonesFor(u))[0])===z?'selected':''}>${z}</option>`).join('')}
+        ${[...new Set([...zoneOptions(), ...(u.zones || []).map(currentZoneName)])].map(z => `<option value="${z}" ${currentZoneName((u.zones && u.zones.length ? u.zones : autoZonesFor(u))[0])===z?'selected':''}>${z}</option>`).join('')}
       </select>
     </div>
     <div style="margin-bottom:4px">
@@ -7135,7 +7156,7 @@ function renderSummary() {
     // sh.etdEtaNew is already direction-aware (ETD for Export, ETA for
     // Import), so this needs no direction branching either
     const isPastCutoff = sh => {
-      if (!cutoffDays) return true;
+      if (cutoffDays == null) return true;  // 0 is a real cutoff (ETD/ETA before today)
       const d = sh.etdEtaNew ? new Date(sh.etdEtaNew) : null;
       if (!d || isNaN(d)) return false;
       const cutoff = new Date(); cutoff.setHours(0,0,0,0); cutoff.setDate(cutoff.getDate() - cutoffDays);
@@ -7161,7 +7182,7 @@ function renderSummary() {
   // ── Compute per-report stats ──────────────────────────────────────────────
   const reportStats = SUMMARY_REPORTS.map(report => {
     if (report.id === 'revenue-not-billed') {
-      return { report, ...computeEtdEtaReportStats('unbilledRevenue', false, 3) };
+      return { report, ...computeEtdEtaReportStats('unbilledRevenue', false, 0) };
     }
     if (report.id === 'cost-not-posted') {
       return { report, ...computeEtdEtaReportStats('unpostedCost', true) };
